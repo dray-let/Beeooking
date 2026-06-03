@@ -11,7 +11,7 @@ const layerOne = {
     {
       name: "Membership Management",
       status: "Sprint 2",
-      capabilities: ["Monthly plans", "Annual plans", "Junior plans", "Family plans", "Privileges", "Renewals"]
+      capabilities: ["Monthly plans", "Annual plans", "Junior plans", "Family plans", "Active/non-active pricing", "Privileges", "Renewals"]
     },
     {
       name: "Booking Engine",
@@ -63,7 +63,8 @@ const layerOne = {
     "Admins can see waiver completion status and resolve exceptions inside their club.",
     "Waiver requirements are club-scoped and preserve waiver version history.",
     "Family memberships support one main member, one spousal member, and additional members only when they are under 18.",
-    "Date of birth is mandatory for every member profile so eligibility, protective eyewear, group age restrictions, and family membership rules can be enforced."
+    "Date of birth is mandatory for every member profile so eligibility, protective eyewear, group age restrictions, and family membership rules can be enforced.",
+    "Membership pricing is calculated from each participant's active or non-active membership status."
   ],
   profileRules: [
     ["Main member", "DOB required", "Every primary adult member must enter date of birth during profile setup."],
@@ -74,6 +75,11 @@ const layerOne = {
     ["Main member", "Required", "The primary adult or account holder for the family membership."],
     ["Spousal member", "Optional, max 1", "One spouse/partner may be attached as the second adult member."],
     ["Other members", "Under 18 only", "Any additional family members must be dependents under 18 years of age."]
+  ],
+  membershipPricingRules: [
+    ["Active member", "Priced as active", "Receives member privileges such as court booking, program eligibility, and active-member pricing."],
+    ["Non-active member", "Priced as non-active", "Can remain on the account for billing, family management, waivers, and communications without active playing privileges."],
+    ["Mixed family", "Per-person pricing", "A family can include a non-active adult account holder and an active child member on the same membership."]
   ],
   firstAdminScreens: [
     "Club context switcher",
@@ -167,6 +173,20 @@ function renderFamilyMembershipRows() {
         <tr>
           <th scope="row">${memberType}</th>
           <td><span class="status-chip">${rule}</span></td>
+          <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderMembershipPricingRows() {
+  return layerOne.membershipPricingRules
+    .map(
+      ([memberStatus, pricingRule, body]) => `
+        <tr>
+          <th scope="row">${memberStatus}</th>
+          <td><span class="status-chip">${pricingRule}</span></td>
           <td>${body}</td>
         </tr>
       `
@@ -595,6 +615,18 @@ function renderPage() {
           </div>
         </section>
 
+        <section aria-labelledby="membership-pricing-title">
+          <div class="section-heading">
+            <h2 id="membership-pricing-title">Membership Pricing Rules</h2>
+            <p>Pricing follows each person's active or non-active membership status, even inside one family account.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderMembershipPricingRows()}</tbody>
+            </table>
+          </div>
+        </section>
+
         <section aria-labelledby="timeline-title">
           <div class="section-heading">
             <h2 id="timeline-title">Layer 1 Build Sequence</h2>
@@ -629,6 +661,7 @@ export default {
         rules: layerOne.layerOneRules,
         profileRules: layerOne.profileRules,
         familyMembershipRules: layerOne.familyMembershipRules,
+        membershipPricingRules: layerOne.membershipPricingRules,
         firstAdminScreens: layerOne.firstAdminScreens
       }, null, 2), {
         headers: {

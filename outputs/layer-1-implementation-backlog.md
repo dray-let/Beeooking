@@ -55,6 +55,7 @@ Stories:
 - As a club admin, I can create monthly, annual, junior, and family membership plans.
 - As a club admin, I can define membership privileges.
 - As a parent or member, I can purchase a membership.
+- As a club admin, I can mark each person on a membership as active or non-active for pricing and privileges.
 - As a club admin, I can view active, expired, canceled, and past-due memberships.
 - As a system, I can handle renewals and membership status updates.
 
@@ -63,6 +64,8 @@ Acceptance criteria:
 - Membership plans support pricing, billing interval, eligibility, and privileges.
 - Memberships can be owned by a user or family.
 - Family memberships enforce one main member, one spousal member, and additional members only when under 18.
+- Membership pricing is based on each participant's active or non-active status.
+- A family membership can include a non-active adult and an active child.
 - Membership status is updated from payment/subscription events.
 - Members with inactive memberships are restricted according to club rules.
 

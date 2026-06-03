@@ -210,6 +210,7 @@ Key fields:
 - `price_cents`
 - `currency`
 - `eligibility_rules`
+- `pricing_rules`
 - `privileges`
 - `status`
 
@@ -240,6 +241,32 @@ Relationships:
 - Belongs to club.
 - Belongs to membership plan.
 - Owner is either user or family.
+- Has many membership participants.
+
+### Membership Participant
+
+Represents one person attached to a membership for pricing and privileges.
+
+Key fields:
+
+- `id`
+- `club_id`
+- `membership_id`
+- `user_id`
+- `family_member_id`
+- `participation_status`
+- `pricing_role`
+- `price_cents`
+- `privileges`
+- `starts_at`
+- `ends_at`
+
+Rules:
+
+- `participation_status` supports active and non-active values.
+- Pricing is calculated at the participant level, not only at the family level.
+- A family membership can include a non-active adult account holder and an active child member.
+- Non-active adults can remain guardians, billing owners, waiver signers, and communication recipients without active playing privileges.
 
 ### Coach
 

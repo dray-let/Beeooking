@@ -78,6 +78,24 @@ Acceptance criteria:
 - Guardian permissions are explicit.
 - Dependent profiles capture date of birth to verify under-18 family membership eligibility, squash protective eyewear requirements, and group age rules.
 
+### Configure Membership Participation
+
+Steps:
+
+1. Club admin opens a member or family membership.
+2. Club admin reviews every person attached to the membership.
+3. Club admin marks each person as active or non-active.
+4. The system recalculates membership pricing and privileges from participant status.
+
+Acceptance criteria:
+
+- Active/non-active status is stored per person on the membership.
+- A main adult or spousal member can be non-active while a dependent child is active.
+- Non-active adults can remain guardians, billing owners, waiver signers, and communication recipients.
+- Active participants receive active-member pricing and privileges.
+- Non-active participants do not receive active playing privileges unless club rules explicitly allow them.
+- The admin shell shows the pricing impact of each participant status change before saving.
+
 ### Complete Waiver
 
 Steps:
