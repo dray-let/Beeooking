@@ -41,7 +41,8 @@ Acceptance criteria:
 - Authentication works for all user types.
 - A user can belong to multiple clubs.
 - Members and family members are managed together in one dashboard area.
-- Family groups support adults, dependent children, guardians, and billing owner.
+- All member profiles require date of birth.
+- Family memberships support one main member, one spousal member, dependent children under 18, guardians, and billing owner.
 - Waivers are versioned and linked to signer and subject.
 - Club admins cannot access records from another club.
 
@@ -61,6 +62,7 @@ Acceptance criteria:
 
 - Membership plans support pricing, billing interval, eligibility, and privileges.
 - Memberships can be owned by a user or family.
+- Family memberships enforce one main member, one spousal member, and additional members only when under 18.
 - Membership status is updated from payment/subscription events.
 - Members with inactive memberships are restricted according to club rules.
 

@@ -11,7 +11,8 @@ Layer 1 is successful when a club can:
 - Invite and manage members, parents, coaches, staff, and admins.
 - Group members and family members together, with dependents added after an adult account exists.
 - Collect waivers, emergency contacts, and profile details.
-- Require date of birth only for adult accounts under age 19.
+- Require date of birth for every member profile.
+- Support family membership composition of one main member, one spousal member, and dependents under 18.
 - Require completed waivers before bookings, registrations, or participation.
 - Sell and renew memberships.
 - Configure membership privileges and booking rules.
@@ -51,10 +52,11 @@ Acceptance criteria:
 
 - A user can belong to one or more clubs.
 - Members and family members are managed in one grouped area, not separate dashboards.
-- Date of birth is optional for adult accounts age 19 and older.
-- Date of birth is required for adult accounts under age 19.
+- Date of birth is required for every main member, spousal member, and dependent profile.
+- Date of birth supports squash protective eyewear requirements, group age restrictions, and family membership eligibility.
 - A dependent child profile is created only after an adult account exists.
-- A family group can contain multiple adults and dependent children.
+- A family membership can include one main member and one spousal member.
+- Additional family membership members must be dependents under 18.
 - A parent can manage child profiles, waivers, bookings, and payments.
 - A club admin can assign roles within their club only.
 - A coach can only see club data they are permitted to access.
@@ -77,6 +79,7 @@ Acceptance criteria:
 
 - A club admin can create membership plans with price, billing interval, and eligibility rules.
 - A member or family can hold an active membership.
+- A family membership enforces one main member, one spousal member, and additional members only under age 18.
 - Membership privileges can control booking limits, court access, pricing, and registration eligibility.
 - The system can identify active, past due, canceled, and expired memberships.
 

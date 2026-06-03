@@ -12,8 +12,9 @@ Sprint 1 includes:
 - Club context.
 - Role assignment.
 - Member, parent, coach, staff, and admin profiles.
-- Conditional date-of-birth collection.
+- Mandatory date-of-birth collection for every member profile.
 - Member/family group management.
+- Family membership composition rules.
 - Dependent creation as a second-step adult workflow after initial login or invitation.
 - Emergency contacts.
 - Waiver templates and signatures.
@@ -35,9 +36,10 @@ Sprint 1 excludes:
 - As a club admin, I can invite a user to my club.
 - As a club admin, I can assign a role to a user within my club.
 - As a club admin, I can create and edit member profiles.
-- As a club admin, I only require date of birth for adult accounts under age 19.
+- As a club admin, I require date of birth for every member profile.
 - As a club admin, I can manage members and family groups in one area.
 - As a club admin, I can add a dependent to an existing adult account.
+- As a club admin, I can enforce family membership composition: one main member, one spousal member, and additional members only if under 18.
 - As a club admin, I can view waiver completion status.
 - As a club admin, I can see which users are blocked because required waivers are incomplete.
 - As a club admin, I can view emergency contact information.
@@ -45,7 +47,7 @@ Sprint 1 excludes:
 ### Parent
 
 - As a parent, I can manage my own profile.
-- As a parent, I only need to enter my date of birth if I am under age 19.
+- As a parent, I enter date of birth for myself and each dependent child profile.
 - As a parent, I can add dependent child profiles after my adult account is created.
 - As a parent, I can manage child profiles in my family group.
 - As a parent, I can sign waivers for my children.
@@ -55,7 +57,7 @@ Sprint 1 excludes:
 ### Member
 
 - As a member, I can manage my own profile.
-- As a member, I only need to enter my date of birth if I am an adult under age 19.
+- As a member, I enter date of birth during profile setup.
 - As a member, I can view my waiver status.
 - As a member, I cannot book or participate until required waivers are complete.
 - As a member, I can add emergency contacts.
@@ -92,15 +94,15 @@ Sprint 1 excludes:
 - A club admin cannot access another club's users, families, waivers, or emergency contacts.
 - Members and family members are grouped together in one dashboard area.
 - A dependent child is created after an adult account exists.
-- A family group can include multiple adults and dependent children.
+- A family membership can include one main member and one spousal member.
+- Additional members on a family membership must be dependents under 18 years of age.
 - A guardian can sign a waiver for a child.
 - Waiver signatures store waiver version, subject user, signer, timestamp, and status.
 - Required waivers block court booking, coach booking, clinic/camp/course registration, and session participation until completed.
 - Emergency contacts are linked to a user and club.
 - The UI makes the active club context clear.
-- Date of birth is optional for adult accounts age 19 and older.
-- Date of birth is required for adult accounts under age 19.
-- Dependent profiles should capture date of birth for eligibility, waiver, and junior-program rules.
+- Date of birth is required for every main member, spousal member, and dependent profile.
+- Date of birth supports squash protective eyewear requirements, group age restrictions, and under-18 dependent validation.
 
 ## Suggested Screens
 
@@ -113,7 +115,7 @@ Sprint 1 excludes:
 - Waiver-blocked users report.
 - Emergency contact panel.
 - Role assignment panel.
-- Conditional date-of-birth field.
+- Required date-of-birth field.
 
 ## Suggested API Endpoints
 
@@ -133,17 +135,27 @@ Sprint 1 excludes:
 - Whether coaches can view emergency contacts by default or only for assigned sessions.
 - Whether family billing owner is required in Sprint 1 or Sprint 2.
 
-## Profile Field Rule
+## Mandatory Date-of-Birth Rule
 
-Date of birth should not be required for every adult account.
+Date of birth is required for every member profile.
 
 Rules:
 
-- Adult age 19 or older: date of birth is optional.
-- Adult under age 19: date of birth is required.
-- Dependent profile: date of birth should be captured for junior eligibility, waiver, and program rules.
+- Main member: date of birth is required.
+- Spousal member: date of birth is required.
+- Dependent profile: date of birth is required to verify under-18 family membership eligibility and group age rules.
 
-The profile UI should explain why date of birth is requested when it is required.
+The profile UI should explain that date of birth is used for squash protective eyewear requirements, group age restrictions, and family membership eligibility.
+
+## Family Membership Composition Rule
+
+Family memberships support:
+
+- One main member.
+- One spousal member.
+- Additional members only if they are dependents under 18 years of age.
+
+The system should block adding an additional non-spousal adult to a family membership.
 
 ## Recommended Next Build Step
 

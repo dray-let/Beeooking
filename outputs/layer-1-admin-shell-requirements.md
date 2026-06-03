@@ -15,7 +15,7 @@ The admin home should show:
 - Waiver completion rate.
 - Waiver-blocked users.
 - Missing emergency contacts.
-- Adult accounts under age 19 missing date of birth.
+- Member profiles missing date of birth.
 - Recent invited users.
 - Setup checklist.
 
@@ -56,7 +56,7 @@ Acceptance criteria:
 - Invitation is scoped to a club.
 - Role assignment is scoped to a club.
 - A user can later belong to multiple clubs.
-- Date of birth is required only when the adult user is under age 19.
+- Date of birth is required for every member profile.
 
 ### Add Dependents To Adult Account
 
@@ -73,9 +73,10 @@ Acceptance criteria:
 - Members and family members are managed in one dashboard area.
 - Adding a child is a second-step workflow after adult account creation.
 - Family group belongs to one club.
-- Multiple adults and dependents are supported.
+- Family memberships support one main member and one spousal member.
+- Additional family membership members must be dependents under 18 years of age.
 - Guardian permissions are explicit.
-- Dependent profiles capture date of birth for eligibility, waiver, and junior-program rules.
+- Dependent profiles capture date of birth to verify under-18 family membership eligibility, squash protective eyewear requirements, and group age rules.
 
 ### Complete Waiver
 
@@ -138,7 +139,7 @@ Parent:
 Member:
 
 - Can manage own profile and emergency contacts.
-- Only needs to provide date of birth if under age 19.
+- Must provide date of birth during profile setup.
 
 Coach:
 
@@ -160,18 +161,25 @@ Super Admin:
 
 ## Profile Field Rules
 
-Date of birth is conditional.
+Date of birth is mandatory for all member profiles.
 
-Adult accounts:
+Rules:
 
-- Age 19 or older: date of birth is optional.
-- Under age 19: date of birth is required.
+- Main member: date of birth is required.
+- Spousal member: date of birth is required.
+- Dependent profile: date of birth is required because additional family membership members must be under 18 and group rules often depend on age.
 
-Dependent profiles:
+The admin shell should surface any member profile that is missing date of birth.
 
-- Date of birth should be captured because junior eligibility, waivers, and program rules often depend on age.
+## Family Membership Composition
 
-The admin shell should surface adult accounts under age 19 that are missing date of birth.
+Family memberships support:
+
+- One main member.
+- One spousal member.
+- Additional members only if under 18 years of age.
+
+The admin shell should block adding additional non-spousal adult members to a family membership.
 
 ## Required Waiver Enforcement
 

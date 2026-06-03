@@ -62,12 +62,18 @@ const layerOne = {
     "Required waivers must be completed before a participant can attend a club program.",
     "Admins can see waiver completion status and resolve exceptions inside their club.",
     "Waiver requirements are club-scoped and preserve waiver version history.",
-    "Date of birth is required only for adult accounts under age 19."
+    "Family memberships support one main member, one spousal member, and additional members only when they are under 18.",
+    "Date of birth is mandatory for every member profile so eligibility, protective eyewear, group age restrictions, and family membership rules can be enforced."
   ],
   profileRules: [
-    ["Adult 19+", "DOB optional", "Adults age 19 and older do not need to enter date of birth during profile setup."],
-    ["Adult under 19", "DOB required", "Adults under age 19 must enter date of birth for eligibility, waiver, and guardian workflows."],
-    ["Dependent", "DOB expected", "Dependent profiles should capture date of birth so clubs can manage junior eligibility and waiver rules."]
+    ["Main member", "DOB required", "Every primary adult member must enter date of birth during profile setup."],
+    ["Spousal member", "DOB required", "The optional spousal member must enter date of birth for eligibility and club rules."],
+    ["Dependent", "DOB required", "Dependent profiles need date of birth to verify under-18 family membership eligibility and age-restricted groups."]
+  ],
+  familyMembershipRules: [
+    ["Main member", "Required", "The primary adult or account holder for the family membership."],
+    ["Spousal member", "Optional, max 1", "One spouse/partner may be attached as the second adult member."],
+    ["Other members", "Under 18 only", "Any additional family members must be dependents under 18 years of age."]
   ],
   firstAdminScreens: [
     "Club context switcher",
@@ -147,6 +153,20 @@ function renderProfileRows() {
         <tr>
           <th scope="row">${profile}</th>
           <td><span class="status-chip">${requirement}</span></td>
+          <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderFamilyMembershipRows() {
+  return layerOne.familyMembershipRules
+    .map(
+      ([memberType, rule, body]) => `
+        <tr>
+          <th scope="row">${memberType}</th>
+          <td><span class="status-chip">${rule}</span></td>
           <td>${body}</td>
         </tr>
       `
@@ -563,6 +583,18 @@ function renderPage() {
           </div>
         </section>
 
+        <section aria-labelledby="family-membership-title">
+          <div class="section-heading">
+            <h2 id="family-membership-title">Family Membership Composition</h2>
+            <p>Family memberships have one primary adult, at most one spousal member, and under-18 dependents only.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderFamilyMembershipRows()}</tbody>
+            </table>
+          </div>
+        </section>
+
         <section aria-labelledby="timeline-title">
           <div class="section-heading">
             <h2 id="timeline-title">Layer 1 Build Sequence</h2>
@@ -596,6 +628,7 @@ export default {
         readiness: layerOne.sprintOneReadiness,
         rules: layerOne.layerOneRules,
         profileRules: layerOne.profileRules,
+        familyMembershipRules: layerOne.familyMembershipRules,
         firstAdminScreens: layerOne.firstAdminScreens
       }, null, 2), {
         headers: {

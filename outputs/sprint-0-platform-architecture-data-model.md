@@ -96,9 +96,8 @@ Relationships:
 
 Profile rule:
 
-- `date_of_birth` is optional for adult accounts age 19 and older.
-- `date_of_birth` is required for adult accounts under age 19.
-- Dependent profiles should capture date of birth for junior eligibility, waiver, and program rules.
+- `date_of_birth` is required for all member profiles.
+- `date_of_birth` supports squash protective eyewear requirements, group age restrictions, and dependent under-18 family membership validation.
 
 ### Club User
 
@@ -136,6 +135,12 @@ Relationships:
 - Belongs to club.
 - Has many family members.
 - Can hold family memberships.
+
+Composition rule:
+
+- A family membership can include one main member.
+- A family membership can include one spousal member.
+- Additional family membership members must be dependents under 18 years of age.
 
 ### Family Member
 
