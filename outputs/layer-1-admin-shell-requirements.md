@@ -13,6 +13,7 @@ The admin home should show:
 - Family count.
 - Coach/staff/admin count.
 - Waiver completion rate.
+- Waiver-blocked users.
 - Missing emergency contacts.
 - Recent invited users.
 - Setup checklist.
@@ -80,12 +81,15 @@ Steps:
 2. Parent or member signs waiver.
 3. Signature stores waiver version.
 4. Admin can view completion report.
+5. System blocks booking, registration, and participation until required waiver is complete.
 
 Acceptance criteria:
 
 - Waiver signature links subject user and signer.
 - Signed timestamp is stored.
 - Historical waiver version is preserved.
+- Required waiver completion is enforced before court booking, coach booking, program registration, and session participation.
+- Admins can see users blocked by incomplete required waivers.
 
 ### Add Emergency Contact
 
@@ -125,6 +129,7 @@ Parent:
 
 - Can manage children linked through family relationships.
 - Can sign waivers for children.
+- Cannot register children for club activity until required waivers are complete.
 
 Member:
 
@@ -148,3 +153,23 @@ Super Admin:
 6. Emergency contact panel.
 7. Setup checklist.
 
+## Required Waiver Enforcement
+
+Waivers are a Layer 1 access gate, not just a document record.
+
+The admin shell must show:
+
+- Required waiver templates.
+- Users missing required waivers.
+- Families with children missing required waivers.
+- Activities blocked by waiver status.
+- Date and signer for completed waivers.
+
+Blocked actions:
+
+- Court booking.
+- Coach booking.
+- Clinic registration.
+- Camp registration.
+- Course registration.
+- Session participation.

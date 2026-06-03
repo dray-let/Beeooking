@@ -53,8 +53,15 @@ const layerOne = {
     ["Tenant model", "Ready to specify", "Every operational record needs club_id, and every request resolves active club context."],
     ["Roles", "Ready to specify", "Super Admin, Club Admin, Staff, Coach, Parent, and Member need explicit access boundaries."],
     ["Families", "Needs build detail", "Parent-child and guardian permissions are the core junior-club workflow."],
-    ["Waivers", "Needs build detail", "Templates, versions, subject user, signer, timestamp, and status must be preserved."],
+    ["Waivers", "Required access gate", "Required waivers must be completed before booking, program registration, or participation."],
     ["Emergency contacts", "Ready to specify", "Contacts attach to a user inside a club and need controlled coach/admin visibility."]
+  ],
+  layerOneRules: [
+    "Required waivers must be completed before a member can book a court.",
+    "Required waivers must be completed before a parent can register a child for clinics, camps, courses, or sessions.",
+    "Required waivers must be completed before a participant can attend a club program.",
+    "Admins can see waiver completion status and resolve exceptions inside their club.",
+    "Waiver requirements are club-scoped and preserve waiver version history."
   ],
   firstAdminScreens: [
     "Club context switcher",
@@ -407,6 +414,32 @@ function renderPage() {
           letter-spacing: 0;
         }
 
+        .rule-band {
+          display: grid;
+          grid-template-columns: minmax(0, 0.55fr) minmax(0, 1fr);
+          gap: 18px;
+          padding: 20px;
+          border: 1px solid #f2c879;
+          border-radius: 8px;
+          background: #fff8ea;
+        }
+
+        .rule-band h2 {
+          margin: 0;
+          font-size: 24px;
+          letter-spacing: 0;
+        }
+
+        .rule-band p {
+          margin: 8px 0 0;
+          color: var(--muted);
+          line-height: 1.5;
+        }
+
+        .rule-band ul {
+          color: #5f471f;
+        }
+
         footer {
           margin-top: 36px;
           padding-top: 24px;
@@ -418,7 +451,8 @@ function renderPage() {
         @media (max-width: 760px) {
           header,
           .timeline-row,
-          .split-grid {
+          .split-grid,
+          .rule-band {
             grid-template-columns: 1fr;
           }
 
@@ -451,6 +485,15 @@ function renderPage() {
             <p>The Layer 1 MVP is the club operations backbone every sport-specific module depends on.</p>
           </div>
           <div class="module-grid">${renderModuleCards()}</div>
+        </section>
+
+        <section class="rule-band" aria-labelledby="rules-title">
+          <div>
+            <span class="label">Required</span>
+            <h2 id="rules-title">Waiver Completion Gate</h2>
+            <p>Layer 1 must block operational activity until required waivers are complete.</p>
+          </div>
+          <ul>${listItems(layerOne.layerOneRules)}</ul>
         </section>
 
         <section aria-labelledby="objects-title">
@@ -515,9 +558,10 @@ export default {
       });
     }
 
-    if (url.pathname === "/api/layer-1/sprint-1") {
+        if (url.pathname === "/api/layer-1/sprint-1") {
       return new Response(JSON.stringify({
         readiness: layerOne.sprintOneReadiness,
+        rules: layerOne.layerOneRules,
         firstAdminScreens: layerOne.firstAdminScreens
       }, null, 2), {
         headers: {

@@ -16,6 +16,7 @@ Sprint 1 includes:
 - Parent-child relationships.
 - Emergency contacts.
 - Waiver templates and signatures.
+- Required waiver enforcement before bookings, program registrations, and participation.
 
 Sprint 1 excludes:
 
@@ -35,6 +36,7 @@ Sprint 1 excludes:
 - As a club admin, I can create and edit member profiles.
 - As a club admin, I can create family accounts.
 - As a club admin, I can view waiver completion status.
+- As a club admin, I can see which users are blocked because required waivers are incomplete.
 - As a club admin, I can view emergency contact information.
 
 ### Parent
@@ -42,12 +44,14 @@ Sprint 1 excludes:
 - As a parent, I can manage my own profile.
 - As a parent, I can create or manage child profiles in my family.
 - As a parent, I can sign waivers for my children.
+- As a parent, I cannot register a child for club activity until required waivers are complete.
 - As a parent, I can add emergency contacts.
 
 ### Member
 
 - As a member, I can manage my own profile.
 - As a member, I can view my waiver status.
+- As a member, I cannot book or participate until required waivers are complete.
 - As a member, I can add emergency contacts.
 
 ### Coach
@@ -83,6 +87,7 @@ Sprint 1 excludes:
 - A family can include multiple adults and children.
 - A guardian can sign a waiver for a child.
 - Waiver signatures store waiver version, subject user, signer, timestamp, and status.
+- Required waivers block court booking, coach booking, clinic/camp/course registration, and session participation until completed.
 - Emergency contacts are linked to a user and club.
 - The UI makes the active club context clear.
 
@@ -93,6 +98,7 @@ Sprint 1 excludes:
 - Family account detail.
 - Waiver template list.
 - Waiver completion report.
+- Waiver-blocked users report.
 - Emergency contact panel.
 - Role assignment panel.
 
@@ -112,7 +118,6 @@ Sprint 1 excludes:
 - Authentication provider: Clerk, Supabase Auth, Auth0, or custom.
 - Whether parent-created child profiles require admin approval.
 - Whether coaches can view emergency contacts by default or only for assigned sessions.
-- Whether waivers are required before bookings or only before program participation.
 - Whether family billing owner is required in Sprint 1 or Sprint 2.
 
 ## Recommended Next Build Step
@@ -126,3 +131,13 @@ Create a minimal admin shell with:
 5. Waiver status.
 6. Emergency contacts.
 
+## Mandatory Waiver Rule
+
+Required waivers must be completed before a member, parent-managed child, or participant can:
+
+- Book a court.
+- Book a coach.
+- Register for a clinic, camp, course, or program.
+- Attend a scheduled session.
+
+The system should preserve the reason a user is blocked, expose the missing waiver to the user or parent, and give club admins a report of incomplete required waivers.

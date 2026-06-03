@@ -11,6 +11,7 @@ Layer 1 is successful when a club can:
 - Invite and manage members, parents, coaches, staff, and admins.
 - Create family accounts with parent-child relationships.
 - Collect waivers, emergency contacts, and profile details.
+- Require completed waivers before bookings, registrations, or participation.
 - Sell and renew memberships.
 - Configure membership privileges and booking rules.
 - Manage facilities, courts, coaches, clinics, camps, and waitlists.
@@ -51,6 +52,7 @@ Acceptance criteria:
 - A club admin can assign roles within their club only.
 - A coach can only see club data they are permitted to access.
 - Every waiver stores status, signer, signed timestamp, and version.
+- Required waivers block court booking, coach booking, program registration, and session participation until completed.
 
 ### 2. Membership Management
 
@@ -86,8 +88,10 @@ Acceptance criteria:
 
 - A club admin can configure facilities, courts, operating hours, and booking rules.
 - A member can book an available court if their membership privileges allow it.
+- A member can only book after all required waivers are complete.
 - A member can book a coach session when the coach is available.
 - A member can register for clinics and camps with capacity limits.
+- A parent can only register a child for clinics and camps after required child waivers are complete.
 - A member can join a waitlist when a court, clinic, or camp is full.
 - The system prevents double-booking for courts, coaches, and program sessions.
 
@@ -174,4 +178,3 @@ Build in this order:
 4. Booking engine for courts and programs.
 5. Stripe payments and refunds.
 6. Communications and admin reporting.
-
