@@ -11,6 +11,7 @@ Layer 1 is successful when a club can:
 - Invite and manage members, parents, coaches, staff, and admins.
 - Group members and family members together, with dependents added after an adult account exists.
 - Collect waivers, emergency contacts, and profile details.
+- Require date of birth only for adult accounts under age 19.
 - Require completed waivers before bookings, registrations, or participation.
 - Sell and renew memberships.
 - Configure membership privileges and booking rules.
@@ -50,6 +51,8 @@ Acceptance criteria:
 
 - A user can belong to one or more clubs.
 - Members and family members are managed in one grouped area, not separate dashboards.
+- Date of birth is optional for adult accounts age 19 and older.
+- Date of birth is required for adult accounts under age 19.
 - A dependent child profile is created only after an adult account exists.
 - A family group can contain multiple adults and dependent children.
 - A parent can manage child profiles, waivers, bookings, and payments.

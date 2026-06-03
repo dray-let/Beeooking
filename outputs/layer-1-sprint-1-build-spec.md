@@ -12,6 +12,7 @@ Sprint 1 includes:
 - Club context.
 - Role assignment.
 - Member, parent, coach, staff, and admin profiles.
+- Conditional date-of-birth collection.
 - Member/family group management.
 - Dependent creation as a second-step adult workflow after initial login or invitation.
 - Emergency contacts.
@@ -34,6 +35,7 @@ Sprint 1 excludes:
 - As a club admin, I can invite a user to my club.
 - As a club admin, I can assign a role to a user within my club.
 - As a club admin, I can create and edit member profiles.
+- As a club admin, I only require date of birth for adult accounts under age 19.
 - As a club admin, I can manage members and family groups in one area.
 - As a club admin, I can add a dependent to an existing adult account.
 - As a club admin, I can view waiver completion status.
@@ -43,6 +45,7 @@ Sprint 1 excludes:
 ### Parent
 
 - As a parent, I can manage my own profile.
+- As a parent, I only need to enter my date of birth if I am under age 19.
 - As a parent, I can add dependent child profiles after my adult account is created.
 - As a parent, I can manage child profiles in my family group.
 - As a parent, I can sign waivers for my children.
@@ -52,6 +55,7 @@ Sprint 1 excludes:
 ### Member
 
 - As a member, I can manage my own profile.
+- As a member, I only need to enter my date of birth if I am an adult under age 19.
 - As a member, I can view my waiver status.
 - As a member, I cannot book or participate until required waivers are complete.
 - As a member, I can add emergency contacts.
@@ -94,6 +98,9 @@ Sprint 1 excludes:
 - Required waivers block court booking, coach booking, clinic/camp/course registration, and session participation until completed.
 - Emergency contacts are linked to a user and club.
 - The UI makes the active club context clear.
+- Date of birth is optional for adult accounts age 19 and older.
+- Date of birth is required for adult accounts under age 19.
+- Dependent profiles should capture date of birth for eligibility, waiver, and junior-program rules.
 
 ## Suggested Screens
 
@@ -106,6 +113,7 @@ Sprint 1 excludes:
 - Waiver-blocked users report.
 - Emergency contact panel.
 - Role assignment panel.
+- Conditional date-of-birth field.
 
 ## Suggested API Endpoints
 
@@ -124,6 +132,18 @@ Sprint 1 excludes:
 - Whether parent-created dependent profiles require admin approval.
 - Whether coaches can view emergency contacts by default or only for assigned sessions.
 - Whether family billing owner is required in Sprint 1 or Sprint 2.
+
+## Profile Field Rule
+
+Date of birth should not be required for every adult account.
+
+Rules:
+
+- Adult age 19 or older: date of birth is optional.
+- Adult under age 19: date of birth is required.
+- Dependent profile: date of birth should be captured for junior eligibility, waiver, and program rules.
+
+The profile UI should explain why date of birth is requested when it is required.
 
 ## Recommended Next Build Step
 

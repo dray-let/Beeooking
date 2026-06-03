@@ -41,6 +41,7 @@ create table users (
   phone text,
   first_name text not null,
   last_name text not null,
+  -- Required only for adult accounts under age 19; expected for dependent profiles.
   date_of_birth date,
   auth_provider_id text unique,
   created_at timestamptz not null default now(),

@@ -15,6 +15,7 @@ The admin home should show:
 - Waiver completion rate.
 - Waiver-blocked users.
 - Missing emergency contacts.
+- Adult accounts under age 19 missing date of birth.
 - Recent invited users.
 - Setup checklist.
 
@@ -55,6 +56,7 @@ Acceptance criteria:
 - Invitation is scoped to a club.
 - Role assignment is scoped to a club.
 - A user can later belong to multiple clubs.
+- Date of birth is required only when the adult user is under age 19.
 
 ### Add Dependents To Adult Account
 
@@ -73,6 +75,7 @@ Acceptance criteria:
 - Family group belongs to one club.
 - Multiple adults and dependents are supported.
 - Guardian permissions are explicit.
+- Dependent profiles capture date of birth for eligibility, waiver, and junior-program rules.
 
 ### Complete Waiver
 
@@ -135,6 +138,7 @@ Parent:
 Member:
 
 - Can manage own profile and emergency contacts.
+- Only needs to provide date of birth if under age 19.
 
 Coach:
 
@@ -153,6 +157,21 @@ Super Admin:
 5. Waiver status.
 6. Emergency contact panel.
 7. Setup checklist.
+
+## Profile Field Rules
+
+Date of birth is conditional.
+
+Adult accounts:
+
+- Age 19 or older: date of birth is optional.
+- Under age 19: date of birth is required.
+
+Dependent profiles:
+
+- Date of birth should be captured because junior eligibility, waivers, and program rules often depend on age.
+
+The admin shell should surface adult accounts under age 19 that are missing date of birth.
 
 ## Required Waiver Enforcement
 

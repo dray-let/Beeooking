@@ -94,6 +94,12 @@ Relationships:
 - May belong to one or more families.
 - May be a parent, member, coach, staff member, or admin depending on club context.
 
+Profile rule:
+
+- `date_of_birth` is optional for adult accounts age 19 and older.
+- `date_of_birth` is required for adult accounts under age 19.
+- Dependent profiles should capture date of birth for junior eligibility, waiver, and program rules.
+
 ### Club User
 
 Joins a global user to a specific club with status and profile context.

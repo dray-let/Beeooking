@@ -61,7 +61,13 @@ const layerOne = {
     "Required waivers must be completed before a parent can register a child for clinics, camps, courses, or sessions.",
     "Required waivers must be completed before a participant can attend a club program.",
     "Admins can see waiver completion status and resolve exceptions inside their club.",
-    "Waiver requirements are club-scoped and preserve waiver version history."
+    "Waiver requirements are club-scoped and preserve waiver version history.",
+    "Date of birth is required only for adult accounts under age 19."
+  ],
+  profileRules: [
+    ["Adult 19+", "DOB optional", "Adults age 19 and older do not need to enter date of birth during profile setup."],
+    ["Adult under 19", "DOB required", "Adults under age 19 must enter date of birth for eligibility, waiver, and guardian workflows."],
+    ["Dependent", "DOB expected", "Dependent profiles should capture date of birth so clubs can manage junior eligibility and waiver rules."]
   ],
   firstAdminScreens: [
     "Club context switcher",
@@ -127,6 +133,20 @@ function renderReadinessRows() {
         <tr>
           <th scope="row">${area}</th>
           <td><span class="status-chip">${status}</span></td>
+          <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderProfileRows() {
+  return layerOne.profileRules
+    .map(
+      ([profile, requirement, body]) => `
+        <tr>
+          <th scope="row">${profile}</th>
+          <td><span class="status-chip">${requirement}</span></td>
           <td>${body}</td>
         </tr>
       `
@@ -531,6 +551,18 @@ function renderPage() {
           </div>
         </section>
 
+        <section aria-labelledby="profile-rules-title">
+          <div class="section-heading">
+            <h2 id="profile-rules-title">Profile Field Rules</h2>
+            <p>Keep adult onboarding lightweight while still collecting birth dates when age-based rules matter.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderProfileRows()}</tbody>
+            </table>
+          </div>
+        </section>
+
         <section aria-labelledby="timeline-title">
           <div class="section-heading">
             <h2 id="timeline-title">Layer 1 Build Sequence</h2>
@@ -563,6 +595,7 @@ export default {
       return new Response(JSON.stringify({
         readiness: layerOne.sprintOneReadiness,
         rules: layerOne.layerOneRules,
+        profileRules: layerOne.profileRules,
         firstAdminScreens: layerOne.firstAdminScreens
       }, null, 2), {
         headers: {
