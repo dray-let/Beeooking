@@ -49,6 +49,22 @@ const layerOne = {
     "Message"
   ],
   roles: ["Super Admin", "Club Admin", "Staff", "Coach", "Parent", "Member"],
+  sprintOneReadiness: [
+    ["Tenant model", "Ready to specify", "Every operational record needs club_id, and every request resolves active club context."],
+    ["Roles", "Ready to specify", "Super Admin, Club Admin, Staff, Coach, Parent, and Member need explicit access boundaries."],
+    ["Families", "Needs build detail", "Parent-child and guardian permissions are the core junior-club workflow."],
+    ["Waivers", "Needs build detail", "Templates, versions, subject user, signer, timestamp, and status must be preserved."],
+    ["Emergency contacts", "Ready to specify", "Contacts attach to a user inside a club and need controlled coach/admin visibility."]
+  ],
+  firstAdminScreens: [
+    "Club context switcher",
+    "Member directory",
+    "User profile detail",
+    "Family account detail",
+    "Role assignment panel",
+    "Waiver completion report",
+    "Emergency contact panel"
+  ],
   sprints: [
     ["Sprint 0", "Platform Architecture & Data Model", "Define tenancy, core objects, permissions, and seed data."],
     ["Sprint 1", "Foundation", "Authentication, roles, family accounts, profiles, waivers, and emergency contacts."],
@@ -91,6 +107,20 @@ function renderSprintRows() {
             <p>${body}</p>
           </div>
         </li>
+      `
+    )
+    .join("");
+}
+
+function renderReadinessRows() {
+  return layerOne.sprintOneReadiness
+    .map(
+      ([area, status, body]) => `
+        <tr>
+          <th scope="row">${area}</th>
+          <td><span class="status-chip">${status}</span></td>
+          <td>${body}</td>
+        </tr>
       `
     )
     .join("");
@@ -311,6 +341,72 @@ function renderPage() {
           line-height: 1.5;
         }
 
+        .split-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+          gap: 14px;
+        }
+
+        .table-wrap,
+        .screen-list {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--surface);
+          overflow: hidden;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 14px;
+        }
+
+        th,
+        td {
+          padding: 14px 16px;
+          border-bottom: 1px solid var(--line);
+          text-align: left;
+          vertical-align: top;
+        }
+
+        tr:last-child th,
+        tr:last-child td {
+          border-bottom: 0;
+        }
+
+        th {
+          width: 150px;
+          color: var(--ink);
+          font-weight: 750;
+        }
+
+        td {
+          color: var(--muted);
+          line-height: 1.45;
+        }
+
+        .status-chip {
+          display: inline-flex;
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 1px solid var(--line);
+          color: var(--accent-strong);
+          font-size: 12px;
+          font-weight: 750;
+          white-space: nowrap;
+        }
+
+        .screen-list {
+          padding: 18px;
+        }
+
+        .screen-list h3 {
+          margin: 0 0 12px;
+          font-size: 18px;
+          letter-spacing: 0;
+        }
+
         footer {
           margin-top: 36px;
           padding-top: 24px;
@@ -321,7 +417,8 @@ function renderPage() {
 
         @media (max-width: 760px) {
           header,
-          .timeline-row {
+          .timeline-row,
+          .split-grid {
             grid-template-columns: 1fr;
           }
 
@@ -372,6 +469,24 @@ function renderPage() {
           <div class="role-strip">${layerOne.roles.map((item) => `<span class="pill">${item}</span>`).join("")}</div>
         </section>
 
+        <section aria-labelledby="sprint-one-title">
+          <div class="section-heading">
+            <h2 id="sprint-one-title">Sprint 1 Foundation Readiness</h2>
+            <p>The immediate work is an admin shell for profiles, roles, families, waivers, and emergency contacts.</p>
+          </div>
+          <div class="split-grid">
+            <div class="table-wrap">
+              <table>
+                <tbody>${renderReadinessRows()}</tbody>
+              </table>
+            </div>
+            <aside class="screen-list">
+              <h3>First Admin Screens</h3>
+              <ul>${listItems(layerOne.firstAdminScreens)}</ul>
+            </aside>
+          </div>
+        </section>
+
         <section aria-labelledby="timeline-title">
           <div class="section-heading">
             <h2 id="timeline-title">Layer 1 Build Sequence</h2>
@@ -394,6 +509,17 @@ export default {
 
     if (url.pathname === "/api/layer-1") {
       return new Response(JSON.stringify(layerOne, null, 2), {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      });
+    }
+
+    if (url.pathname === "/api/layer-1/sprint-1") {
+      return new Response(JSON.stringify({
+        readiness: layerOne.sprintOneReadiness,
+        firstAdminScreens: layerOne.firstAdminScreens
+      }, null, 2), {
         headers: {
           "Content-Type": "application/json; charset=utf-8"
         }
