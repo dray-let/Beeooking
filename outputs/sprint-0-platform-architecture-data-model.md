@@ -211,6 +211,8 @@ Key fields:
 - `currency`
 - `eligibility_rules`
 - `pricing_rules`
+- `self_service_opt_in`
+- `admin_required_for_opt_out`
 - `privileges`
 - `status`
 
@@ -218,6 +220,11 @@ Relationships:
 
 - Belongs to club.
 - Has many memberships.
+
+Rules:
+
+- Monthly membership plans can allow self-service opt-in after payment.
+- Monthly membership opt-out requires club admin contact and review.
 
 ### Membership
 

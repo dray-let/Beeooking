@@ -65,7 +65,8 @@ const layerOne = {
     "Family memberships support one main member, one spousal member, and additional members only when they are under 18.",
     "Date of birth is mandatory for every member profile so eligibility, protective eyewear, group age restrictions, and family membership rules can be enforced.",
     "Members choose active or non-active participants during membership setup, then club admins review and approve the final membership type.",
-    "After membership type is approved, active/non-active changes require contacting the club admin."
+    "After membership type is approved, active/non-active changes require contacting the club admin.",
+    "Members can opt into monthly membership on their own once payment is completed, but monthly membership opt-out requires contacting the club admin."
   ],
   profileRules: [
     ["Main member", "DOB required", "Every primary adult member must enter date of birth during profile setup."],
@@ -80,6 +81,8 @@ const layerOne = {
   membershipPricingRules: [
     ["Setup", "Member selects", "The member or parent chooses which people are active or non-active before submitting the membership."],
     ["Admin review", "Club approves", "Club admin reviews the selected participants, pricing impact, and final membership type before approval."],
+    ["Monthly opt-in", "Self-service payment", "Members can start a monthly membership on their own when they complete payment."],
+    ["Monthly opt-out", "Contact admin", "Members must contact the club admin to opt out of or cancel monthly membership."],
     ["After approval", "Admin change only", "A family can include a non-active adult and active child, but changes after approval require contacting the club admin."]
   ],
   firstAdminScreens: [

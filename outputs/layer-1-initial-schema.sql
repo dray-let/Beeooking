@@ -136,6 +136,8 @@ create table membership_plans (
   currency text not null default 'usd',
   eligibility_rules jsonb not null default '{}'::jsonb,
   pricing_rules jsonb not null default '{}'::jsonb,
+  self_service_opt_in boolean not null default true,
+  admin_required_for_opt_out boolean not null default true,
   privileges jsonb not null default '{}'::jsonb,
   status text not null default 'active',
   created_at timestamptz not null default now(),

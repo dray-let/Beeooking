@@ -99,6 +99,23 @@ Acceptance criteria:
 - Members and parents cannot self-change active/non-active status after the membership type is approved.
 - After approval, participant status changes require contacting the club admin.
 
+### Monthly Membership Opt-In And Opt-Out
+
+Steps:
+
+1. Member chooses an available monthly membership plan.
+2. Member completes payment.
+3. System activates the monthly membership according to club rules.
+4. Member contacts the club admin when they want to opt out or cancel.
+
+Acceptance criteria:
+
+- Monthly membership opt-in is self-service when payment is completed.
+- Monthly membership opt-out is not self-service.
+- The admin shell clearly shows monthly membership opt-out requests for club admin review.
+- Club admin can approve, schedule, or deny opt-out based on club policy.
+- Payment status and membership status are tracked separately.
+
 ### Complete Waiver
 
 Steps:

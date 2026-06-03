@@ -15,6 +15,8 @@ Layer 1 is successful when a club can:
 - Support family membership composition of one main member, one spousal member, and dependents under 18.
 - Let members choose active or non-active participants during membership setup, with club admin review before approval.
 - Require members to contact the club admin to change active/non-active participation after membership type is approved.
+- Let members opt into monthly membership on their own after payment.
+- Require members to contact the club admin to opt out of monthly membership.
 - Require completed waivers before bookings, registrations, or participation.
 - Sell and renew memberships.
 - Configure membership privileges and booking rules.
@@ -89,6 +91,8 @@ Acceptance criteria:
 - Members or parents can choose active/non-active status for each participant during membership setup.
 - Club admins review participant status, pricing, and membership type before final approval.
 - Once the membership type is approved, participants cannot self-change active/non-active status and must contact the club admin.
+- Members can self-service opt into monthly membership when they complete payment.
+- Members cannot self-service opt out of monthly membership and must contact the club admin.
 - Membership privileges can control booking limits, court access, pricing, and registration eligibility.
 - The system can identify active, past due, canceled, and expired memberships.
 

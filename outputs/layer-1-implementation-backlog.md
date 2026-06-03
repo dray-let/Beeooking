@@ -56,6 +56,8 @@ Stories:
 - As a club admin, I can define membership privileges.
 - As a parent or member, I can choose who is active or non-active during membership setup.
 - As a parent or member, I can purchase a membership.
+- As a member, I can opt into monthly membership on my own by completing payment.
+- As a member, I can request monthly membership opt-out by contacting the club admin.
 - As a club admin, I can mark each person on a membership as active or non-active for pricing and privileges.
 - As a club admin, I can review and approve the final membership type.
 - As a club admin, I can view active, expired, canceled, and past-due memberships.
@@ -70,6 +72,8 @@ Acceptance criteria:
 - A family membership can include a non-active adult and an active child.
 - Club admin review is required before the membership type is finalized.
 - Once finalized, active/non-active participant changes require club admin support.
+- Monthly membership opt-in is self-service after payment.
+- Monthly membership opt-out requires club admin review.
 - Membership status is updated from payment/subscription events.
 - Members with inactive memberships are restricted according to club rules.
 
