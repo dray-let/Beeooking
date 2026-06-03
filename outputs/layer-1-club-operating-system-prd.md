@@ -65,6 +65,7 @@ Acceptance criteria:
 - A club admin can assign roles within their club only.
 - A coach can only see club data they are permitted to access.
 - Every waiver stores status, signer, signed timestamp, and version.
+- One family waiver can cover every member in the family when the waiver text states the signer is responsible for all listed family members.
 - Required waivers block court booking, coach booking, program registration, and session participation until completed.
 
 ### 2. Membership Management
@@ -114,7 +115,7 @@ Acceptance criteria:
 - A member can only book after all required waivers are complete.
 - A member can book a coach session when the coach is available.
 - A member can register for clinics and camps with capacity limits.
-- A parent can only register a child for clinics and camps after required child waivers are complete.
+- A parent can only register a child for clinics and camps after required family or individual waiver coverage is complete.
 - A member can join a waitlist when a court, clinic, or camp is full.
 - The system prevents double-booking for courts, coaches, and program sessions.
 

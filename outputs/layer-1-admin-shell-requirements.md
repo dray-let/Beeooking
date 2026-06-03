@@ -121,18 +121,26 @@ Acceptance criteria:
 Steps:
 
 1. Club admin creates active waiver template.
-2. Parent or member signs waiver.
-3. Signature stores waiver version.
-4. Admin can view completion report.
-5. System blocks booking, registration, and participation until required waiver is complete.
+2. Waiver states whether the signer is responsible for one person or all listed family members.
+3. Parent, guardian, or member signs waiver.
+4. Signature stores waiver version and coverage scope.
+5. Admin can view completion report.
+6. System blocks booking, registration, and participation until required waiver is complete.
+
+Family waiver rule:
+
+- One waiver can cover the full family when the waiver text states the signer is responsible for all listed family members.
+- Family waiver completion applies to every family member covered by that waiver.
+- If the waiver is not family-scoped, the system can require individual subject coverage.
 
 Acceptance criteria:
 
-- Waiver signature links subject user and signer.
+- Waiver signature links signer and covered family or subject user.
+- Coverage scope is stored as family, individual, or other club-defined scope.
 - Signed timestamp is stored.
 - Historical waiver version is preserved.
 - Required waiver completion is enforced before court booking, coach booking, program registration, and session participation.
-- Admins can see users blocked by incomplete required waivers.
+- Admins can see users and families blocked by incomplete required waivers.
 
 ### Add Emergency Contact
 
@@ -228,6 +236,7 @@ The admin shell must show:
 - Required waiver templates.
 - Users missing required waivers.
 - Family groups with dependents missing required waivers.
+- Family waiver coverage and signer responsibility.
 - Activities blocked by waiver status.
 - Date and signer for completed waivers.
 

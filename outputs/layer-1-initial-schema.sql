@@ -110,6 +110,8 @@ create table waivers (
   name text not null,
   version text not null,
   body text not null,
+  default_coverage_scope text not null default 'family',
+  responsibility_statement text,
   status text not null default 'active',
   created_at timestamptz not null default now(),
   unique (club_id, name, version)
@@ -119,12 +121,19 @@ create table waiver_signatures (
   id uuid primary key,
   club_id uuid not null references clubs(id),
   waiver_id uuid not null references waivers(id),
-  subject_user_id uuid not null references users(id),
+  subject_user_id uuid references users(id),
+  covered_family_id uuid references families(id),
+  coverage_scope text not null default 'individual',
   signed_by_user_id uuid not null references users(id),
   status text not null default 'signed',
   signed_at timestamptz not null default now(),
   signature_metadata jsonb not null default '{}'::jsonb,
-  unique (club_id, waiver_id, subject_user_id)
+  check (
+    (subject_user_id is not null and covered_family_id is null)
+    or (subject_user_id is null and covered_family_id is not null)
+  ),
+  unique (club_id, waiver_id, subject_user_id),
+  unique (club_id, waiver_id, covered_family_id)
 );
 
 create table membership_plans (

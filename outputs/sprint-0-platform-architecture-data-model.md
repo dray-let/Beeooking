@@ -171,6 +171,8 @@ Key fields:
 - `name`
 - `version`
 - `body`
+- `default_coverage_scope`
+- `responsibility_statement`
 - `status`
 
 Relationships:
@@ -180,7 +182,7 @@ Relationships:
 
 ### Waiver Signature
 
-Represents a signed waiver for a user, usually signed by an adult or guardian.
+Represents a signed waiver for a family or user, usually signed by an adult or guardian.
 
 Key fields:
 
@@ -188,6 +190,8 @@ Key fields:
 - `club_id`
 - `waiver_id`
 - `subject_user_id`
+- `covered_family_id`
+- `coverage_scope`
 - `signed_by_user_id`
 - `signed_at`
 - `status`
@@ -195,7 +199,13 @@ Key fields:
 Relationships:
 
 - Belongs to waiver.
-- Links the player/member and signer.
+- Links the covered family or player/member and signer.
+
+Rules:
+
+- One family waiver can cover every listed family member when the waiver text states the signer is responsible for all covered members.
+- Individual waiver coverage is still supported when a waiver is not family-scoped.
+- Coverage scope and historical waiver version must be preserved.
 
 ### Membership Plan
 

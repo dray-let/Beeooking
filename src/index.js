@@ -62,6 +62,7 @@ const layerOne = {
     "Required waivers must be completed before a participant can attend a club program.",
     "Admins can see waiver completion status and resolve exceptions inside their club.",
     "Waiver requirements are club-scoped and preserve waiver version history.",
+    "A family waiver can cover all members in the family when the waiver states the signer is responsible for every listed family member.",
     "Family memberships support one main member, one spousal member, and additional members only when they are under 18.",
     "Date of birth is mandatory for every member profile so eligibility, protective eyewear, group age restrictions, and family membership rules can be enforced.",
     "Members choose active or non-active participants during membership setup, then club admins review and approve the final membership type.",
@@ -90,7 +91,7 @@ const layerOne = {
       ["1", "Adult profile", "Main adult creates the account, enters DOB, contact details, and emergency contact."],
       ["2", "Add family", "Adult adds spouse or dependent profiles after initial login. DOB is required for every person."],
       ["3", "Choose participation", "Family chooses who is active or non-active and submits the membership for admin review."],
-      ["4", "Complete waivers", "Required waivers must be signed before bookings, programs, or participation unlock."]
+      ["4", "Complete family waiver", "One adult signs the waiver for the family when the waiver states responsibility for all listed members."]
     ],
     families: [
       {
@@ -98,13 +99,13 @@ const layerOne = {
         name: "Letourneau Family",
         membership: "Family Monthly",
         reviewStatus: "Pending admin review",
-        waiverStatus: "2 of 3 complete",
+        waiverStatus: "Family waiver missing",
         paymentStatus: "Payment ready",
         monthlyAction: "Can opt in after payment",
         members: [
-          ["Danielle Letourneau", "Main member", "Non-active", "DOB complete", "Signed"],
-          ["Avery Letourneau", "Dependent", "Active", "DOB complete", "Missing"],
-          ["Maya Letourneau", "Dependent", "Active", "DOB complete", "Signed"]
+          ["Danielle Letourneau", "Main member", "Non-active", "DOB complete", "Not covered"],
+          ["Avery Letourneau", "Dependent", "Active", "DOB complete", "Not covered"],
+          ["Maya Letourneau", "Dependent", "Active", "DOB complete", "Not covered"]
         ]
       },
       {
@@ -112,13 +113,13 @@ const layerOne = {
         name: "Chen Family",
         membership: "Family Annual",
         reviewStatus: "Approved and locked",
-        waiverStatus: "All complete",
+        waiverStatus: "Family waiver complete",
         paymentStatus: "Paid",
         monthlyAction: "Contact admin to change",
         members: [
-          ["Grace Chen", "Main member", "Active", "DOB complete", "Signed"],
-          ["Leo Chen", "Spousal member", "Non-active", "DOB complete", "Signed"],
-          ["Nina Chen", "Dependent", "Active", "DOB complete", "Signed"]
+          ["Grace Chen", "Main member", "Active", "DOB complete", "Covered"],
+          ["Leo Chen", "Spousal member", "Non-active", "DOB complete", "Covered"],
+          ["Nina Chen", "Dependent", "Active", "DOB complete", "Covered"]
         ]
       },
       {
@@ -130,7 +131,7 @@ const layerOne = {
         paymentStatus: "Awaiting payment",
         monthlyAction: "Self-service opt-in",
         members: [
-          ["Sam Rivera", "Main member", "Active", "DOB complete", "Missing"]
+          ["Sam Rivera", "Main member", "Active", "DOB complete", "Not covered"]
         ]
       }
     ],
@@ -295,7 +296,7 @@ function renderParticipantRows(family) {
             <button class="status-toggle" type="button" data-current-status="${participation}">${participation}</button>
           </td>
           <td>${dob}</td>
-          <td><span class="status-chip ${waiver === "Missing" ? "is-warning" : ""}">${waiver}</span></td>
+          <td><span class="status-chip ${waiver === "Not covered" ? "is-warning" : ""}">${waiver}</span></td>
         </tr>
       `
     )
@@ -963,7 +964,7 @@ function renderPage() {
           <div>
             <span class="label">Required</span>
             <h2 id="rules-title">Waiver Completion Gate</h2>
-            <p>Layer 1 must block operational activity until required waivers are complete.</p>
+            <p>Layer 1 must block operational activity until required waivers are complete. A single family waiver can cover all listed members when the waiver text states that responsibility.</p>
           </div>
           <ul>${listItems(layerOne.layerOneRules)}</ul>
         </section>

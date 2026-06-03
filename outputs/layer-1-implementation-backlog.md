@@ -32,7 +32,7 @@ Stories:
 - As a club admin, I can invite members, parents, coaches, staff, and admins.
 - As a club admin, I can assign club-specific roles.
 - As a parent, I can add and manage dependent child profiles after my adult account exists.
-- As a parent, I can sign waivers for my children.
+- As a parent, I can sign one family waiver when the waiver states I am responsible for all listed family members.
 - As a member, I can manage my own profile.
 - As a club admin, I can view waiver completion status.
 
@@ -43,7 +43,8 @@ Acceptance criteria:
 - Members and family members are managed together in one dashboard area.
 - All member profiles require date of birth.
 - Family memberships support one main member, one spousal member, dependent children under 18, guardians, and billing owner.
-- Waivers are versioned and linked to signer and subject.
+- One family waiver can cover every listed family member when the waiver text states signer responsibility for the full family.
+- Waivers are versioned and linked to signer plus covered family or individual subject.
 - Club admins cannot access records from another club.
 
 ## Sprint 2: Membership System

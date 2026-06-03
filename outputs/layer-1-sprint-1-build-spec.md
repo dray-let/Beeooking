@@ -50,7 +50,7 @@ Sprint 1 excludes:
 - As a parent, I enter date of birth for myself and each dependent child profile.
 - As a parent, I can add dependent child profiles after my adult account is created.
 - As a parent, I can manage child profiles in my family group.
-- As a parent, I can sign waivers for my children.
+- As a parent, I can sign one family waiver when the waiver states I am responsible for all listed family members.
 - As a parent, I cannot register a child for club activity until required waivers are complete.
 - As a parent, I can add emergency contacts.
 
@@ -96,8 +96,8 @@ Sprint 1 excludes:
 - A dependent child is created after an adult account exists.
 - A family membership can include one main member and one spousal member.
 - Additional members on a family membership must be dependents under 18 years of age.
-- A guardian can sign a waiver for a child.
-- Waiver signatures store waiver version, subject user, signer, timestamp, and status.
+- A guardian can sign one waiver for a family when the waiver states the signer is responsible for all listed family members.
+- Waiver signatures store waiver version, covered family or subject user, signer, timestamp, coverage scope, and status.
 - Required waivers block court booking, coach booking, clinic/camp/course registration, and session participation until completed.
 - Emergency contacts are linked to a user and club.
 - The UI makes the active club context clear.
@@ -177,4 +177,6 @@ Required waivers must be completed before a member, parent-managed child, or par
 - Register for a clinic, camp, course, or program.
 - Attend a scheduled session.
 
-The system should preserve the reason a user is blocked, expose the missing waiver to the user or parent, and give club admins a report of incomplete required waivers.
+Family waivers can satisfy this gate for every listed family member when the waiver text states the signer is responsible for all covered members.
+
+The system should preserve the reason a user or family is blocked, expose the missing waiver to the user or parent, and give club admins a report of incomplete required waivers.
