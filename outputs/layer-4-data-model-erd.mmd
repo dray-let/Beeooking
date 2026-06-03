@@ -1,0 +1,32 @@
+erDiagram
+  CLUBS ||--|| AI_SETTINGS : configures
+  CLUBS ||--o{ AI_DATA_SOURCES : owns
+  CLUBS ||--o{ AI_GENERATION_RUNS : runs
+  AI_PROMPT_VERSIONS ||--o{ AI_GENERATION_RUNS : informs
+
+  AI_GENERATION_RUNS ||--o{ AI_INSIGHTS : generates
+  AI_GENERATION_RUNS ||--o{ AI_RECOMMENDATIONS : generates
+  AI_INSIGHTS ||--o{ AI_RECOMMENDATIONS : produces
+
+  CLUBS ||--o{ AI_INSIGHTS : owns
+  CLUBS ||--o{ AI_RECOMMENDATIONS : owns
+  USERS ||--o{ AI_RECOMMENDATIONS : target
+
+  AI_RECOMMENDATIONS ||--o{ RECOMMENDATION_ACTIONS : acted_on_by
+  AI_RECOMMENDATIONS ||--o{ RECOMMENDATION_FEEDBACK : receives
+  AI_RECOMMENDATIONS ||--o{ RECOMMENDATION_OUTCOMES : measured_by
+  USERS ||--o{ RECOMMENDATION_ACTIONS : actor
+  USERS ||--o{ RECOMMENDATION_FEEDBACK : author
+
+  AI_DATA_SOURCES ||--o{ EXTERNAL_PLAYER_SIGNALS : provides
+  USERS ||--o{ EXTERNAL_PLAYER_SIGNALS : player
+
+  MEMBERSHIPS ||--o{ AI_RECOMMENDATIONS : source_context
+  PROGRAMS ||--o{ AI_RECOMMENDATIONS : source_context
+  BOOKINGS ||--o{ AI_RECOMMENDATIONS : source_context
+  ATTENDANCE_RECORDS ||--o{ AI_INSIGHTS : source_context
+  DEVELOPMENT_GOALS ||--o{ AI_INSIGHTS : source_context
+  SKILL_ASSESSMENTS ||--o{ AI_INSIGHTS : source_context
+  MATCHES ||--o{ AI_INSIGHTS : source_context
+  CHALLENGES ||--o{ AI_RECOMMENDATIONS : action_context
+

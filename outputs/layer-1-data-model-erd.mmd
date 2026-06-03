@@ -1,0 +1,53 @@
+erDiagram
+  CLUBS ||--o{ FACILITIES : owns
+  CLUBS ||--o{ COURTS : owns
+  FACILITIES ||--o{ COURTS : contains
+
+  USERS ||--o{ CLUB_USERS : joins
+  CLUBS ||--o{ CLUB_USERS : scopes
+  USERS ||--o{ ROLE_ASSIGNMENTS : receives
+  CLUBS ||--o{ ROLE_ASSIGNMENTS : scopes
+
+  CLUBS ||--o{ FAMILIES : owns
+  FAMILIES ||--o{ FAMILY_MEMBERS : includes
+  USERS ||--o{ FAMILY_MEMBERS : belongs_to
+
+  CLUBS ||--o{ WAIVERS : defines
+  WAIVERS ||--o{ WAIVER_SIGNATURES : signed_as
+  USERS ||--o{ WAIVER_SIGNATURES : subject
+  USERS ||--o{ WAIVER_SIGNATURES : signer
+
+  CLUBS ||--o{ MEMBERSHIP_PLANS : offers
+  MEMBERSHIP_PLANS ||--o{ MEMBERSHIPS : creates
+  CLUBS ||--o{ MEMBERSHIPS : scopes
+
+  CLUBS ||--o{ COACHES : employs
+  USERS ||--o{ COACHES : profile
+  COACHES ||--o{ COACH_AVAILABILITY : has
+
+  CLUBS ||--o{ PROGRAMS : runs
+  PROGRAMS ||--o{ SESSIONS : schedules
+  COACHES ||--o{ SESSIONS : leads
+  COURTS ||--o{ SESSIONS : hosts
+
+  PROGRAMS ||--o{ PROGRAM_REGISTRATIONS : enrolls
+  USERS ||--o{ PROGRAM_REGISTRATIONS : participant
+  SESSIONS ||--o{ ATTENDANCE_RECORDS : tracks
+  USERS ||--o{ ATTENDANCE_RECORDS : attends
+
+  CLUBS ||--o{ BOOKINGS : scopes
+  USERS ||--o{ BOOKINGS : books
+  USERS ||--o{ BOOKINGS : participates
+  CLUBS ||--o{ WAITLIST_ENTRIES : scopes
+  USERS ||--o{ WAITLIST_ENTRIES : joins
+
+  CLUBS ||--o{ BILLING_CUSTOMERS : owns
+  CLUBS ||--o{ INVOICES : issues
+  CLUBS ||--o{ PAYMENTS : receives
+  PAYMENTS ||--o{ REFUNDS : refunded_by
+  USERS ||--o{ PAYMENTS : pays
+
+  CLUBS ||--o{ MESSAGES : sends
+  MESSAGES ||--o{ MESSAGE_RECIPIENTS : delivers
+  USERS ||--o{ MESSAGE_RECIPIENTS : receives
+
