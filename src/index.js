@@ -3,7 +3,8 @@ const artifacts = [
   ["Layer 2", "Player Development Platform", "Coach feedback, session notes, goals, skill assessments, report cards, and progress dashboards."],
   ["Layer 3", "Competition Platform", "Ladders, challenges, round robins, leagues, tournament registration, and match history."],
   ["Layer 4", "AI Platform", "AI Coach, AI Club Manager, AI Player Development, recommendations, insights, and outcomes."],
-  ["Layer 5", "Ecosystem & Scale Platform", "Integrations, partner APIs, analytics, benchmarking, organizations, exports, and governance."]
+  ["Layer 5", "Ecosystem & Scale Platform", "Integrations, partner APIs, analytics, benchmarking, organizations, exports, and governance."],
+  ["Layer 6", "Commercialization & Growth Platform", "Packaging, entitlements, sales pipeline, onboarding, customer success, support, feedback, and growth analytics."]
 ];
 
 function renderPage() {
