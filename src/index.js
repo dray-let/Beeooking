@@ -16,7 +16,7 @@ const layerOne = {
     {
       name: "Booking Engine",
       status: "Sprint 3",
-      capabilities: ["Court reservations", "Coach bookings", "Clinic bookings", "Camp registration", "Waitlists"]
+      capabilities: ["Courts", "Lanes", "Studios", "Coach bookings", "Clinic bookings", "Camp registration", "Waitlists"]
     },
     {
       name: "Payments",
@@ -37,7 +37,7 @@ const layerOne = {
   coreObjects: [
     "Club",
     "Facility",
-    "Court",
+    "Bookable Resource",
     "User",
     "Family",
     "Membership",
@@ -49,6 +49,26 @@ const layerOne = {
     "Message"
   ],
   roles: ["Super Admin", "Club Admin", "Staff", "Coach", "Parent", "Member"],
+  activityOptions: [
+    ["Tennis", "court", true, 4],
+    ["Squash", "court", true, 6],
+    ["Padel", "court", false, 0],
+    ["Pickleball", "court", true, 8],
+    ["Table tennis", "table", false, 0],
+    ["Badminton", "court", false, 0],
+    ["Swimming", "lane", false, 0],
+    ["Fitness", "studio", true, 2],
+    ["Ice hockey", "rink", false, 0],
+    ["Multi-purpose", "room", false, 0]
+  ],
+  activitySetupRules: [
+    ["Activity menu", "Scroll and select", "Super Admin chooses relevant activities from a dropdown-style menu of all supported sports and facility uses."],
+    ["Racket sports", "Courts or tables", "Tennis, squash, padel, pickleball, table tennis, and badminton."],
+    ["Aquatics", "Lanes", "Swimming can be enabled when clubs need lane-based booking."],
+    ["Studios and rooms", "Studios or rooms", "Fitness studios and multi-purpose rooms can be enabled for class or room booking."],
+    ["Ice sports", "Rinks", "Rinks can be enabled when a club needs ice or rink-based booking."],
+    ["Resource counts", "Required after selection", "After activities are selected, Super Admin enters how many courts, lanes, studios, rinks, tables, or rooms are available."]
+  ],
   sprintOneReadiness: [
     ["Tenant model", "Ready to specify", "Every operational record needs club_id, and every request resolves active club context."],
     ["Roles", "Ready to specify", "Super Admin, Club Admin, Staff, Coach, Parent, and Member need explicit access boundaries."],
@@ -248,6 +268,54 @@ function renderMembershipPricingRows() {
           <th scope="row">${memberStatus}</th>
           <td><span class="status-chip">${pricingRule}</span></td>
           <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderActivitySetupRows() {
+  return layerOne.activitySetupRules
+    .map(
+      ([activityType, resourceUnit, body]) => `
+        <tr>
+          <th scope="row">${activityType}</th>
+          <td><span class="status-chip">${resourceUnit}</span></td>
+          <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderActivityMenuOptions() {
+  return layerOne.activityOptions
+    .map(
+      ([activity, unit, selected]) => `
+        <label class="activity-option">
+          <input type="checkbox" ${selected ? "checked" : ""} data-activity-option="${activity}" data-resource-unit="${unit}">
+          <span>${activity}</span>
+          <small>${unit}s</small>
+        </label>
+      `
+    )
+    .join("");
+}
+
+function renderResourceCountRows() {
+  return layerOne.activityOptions
+    .filter(([, , selected]) => selected)
+    .map(
+      ([activity, unit, , count]) => `
+        <tr data-resource-row="${activity}">
+          <th scope="row">${activity}</th>
+          <td><span class="status-chip">${unit}s</span></td>
+          <td>
+            <label class="count-input">
+              <span>Number needed</span>
+              <input type="number" min="0" value="${count}" aria-label="${activity} ${unit} count">
+            </label>
+          </td>
         </tr>
       `
     )
@@ -865,6 +933,81 @@ function renderPage() {
           color: var(--ink);
         }
 
+        .activity-setup-grid {
+          display: grid;
+          grid-template-columns: minmax(280px, 0.42fr) minmax(0, 1fr);
+          gap: 14px;
+        }
+
+        .activity-menu {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #ffffff;
+          overflow: hidden;
+        }
+
+        .activity-menu summary {
+          min-height: 48px;
+          padding: 13px 16px;
+          cursor: pointer;
+          font-weight: 800;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .activity-menu-body {
+          max-height: 260px;
+          overflow-y: auto;
+          padding: 10px;
+        }
+
+        .activity-option {
+          display: grid;
+          grid-template-columns: 22px minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 10px;
+          min-height: 42px;
+          padding: 8px 10px;
+          border-radius: 8px;
+          color: var(--ink);
+        }
+
+        .activity-option:hover {
+          background: var(--surface);
+        }
+
+        .activity-option input {
+          width: 16px;
+          height: 16px;
+          accent-color: var(--accent);
+        }
+
+        .activity-option small {
+          color: var(--muted);
+          font-weight: 700;
+        }
+
+        .count-input {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .count-input span {
+          color: var(--muted);
+          font-size: 12px;
+          font-weight: 750;
+        }
+
+        .count-input input {
+          width: 86px;
+          min-height: 36px;
+          padding: 6px 8px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          font: inherit;
+          font-weight: 750;
+        }
+
         footer {
           margin-top: 36px;
           padding-top: 24px;
@@ -879,7 +1022,8 @@ function renderPage() {
           .split-grid,
           .rule-band,
           .member-workspace,
-          .metric-row {
+          .metric-row,
+          .activity-setup-grid {
             grid-template-columns: 1fr;
           }
 
@@ -958,6 +1102,29 @@ function renderPage() {
             <p>The Layer 1 MVP is the club operations backbone every sport-specific module depends on.</p>
           </div>
           <div class="module-grid">${renderModuleCards()}</div>
+        </section>
+
+        <section aria-labelledby="activity-setup-title">
+          <div class="section-heading">
+            <h2 id="activity-setup-title">Super Admin Club Setup</h2>
+            <p>First choose activities from a scrollable menu, then set how many resources each selected activity needs.</p>
+          </div>
+          <div class="activity-setup-grid">
+            <details class="activity-menu" open>
+              <summary>Activity menu</summary>
+              <div class="activity-menu-body">${renderActivityMenuOptions()}</div>
+            </details>
+            <div class="table-wrap">
+              <table>
+                <tbody data-resource-counts>${renderResourceCountRows()}</tbody>
+              </table>
+            </div>
+          </div>
+          <div class="table-wrap" style="margin-top: 14px;">
+            <table>
+              <tbody>${renderActivitySetupRows()}</tbody>
+            </table>
+          </div>
         </section>
 
         <section class="rule-band" aria-labelledby="rules-title">
@@ -1079,6 +1246,31 @@ function renderPage() {
             button.textContent = nextStatus;
           });
         });
+
+        const resourceCounts = document.querySelector("[data-resource-counts]");
+        document.querySelectorAll("[data-activity-option]").forEach((input) => {
+          input.addEventListener("change", () => {
+            if (!resourceCounts) return;
+            const activity = input.dataset.activityOption;
+            const unit = input.dataset.resourceUnit;
+            const existingRow = resourceCounts.querySelector("[data-resource-row='" + activity + "']");
+
+            if (input.checked && !existingRow) {
+              const row = document.createElement("tr");
+              row.dataset.resourceRow = activity;
+              row.innerHTML =
+                "<th scope='row'>" + activity + "</th>" +
+                "<td><span class='status-chip'>" + unit + "s</span></td>" +
+                "<td><label class='count-input'><span>Number needed</span>" +
+                "<input type='number' min='0' value='1' aria-label='" + activity + " " + unit + " count'></label></td>";
+              resourceCounts.appendChild(row);
+            }
+
+            if (!input.checked && existingRow) {
+              existingRow.remove();
+            }
+          });
+        });
       </script>
     </body>
   </html>`;
@@ -1100,6 +1292,8 @@ export default {
       return new Response(JSON.stringify({
         readiness: layerOne.sprintOneReadiness,
         rules: layerOne.layerOneRules,
+        activityOptions: layerOne.activityOptions,
+        activitySetupRules: layerOne.activitySetupRules,
         profileRules: layerOne.profileRules,
         familyMembershipRules: layerOne.familyMembershipRules,
         membershipPricingRules: layerOne.membershipPricingRules,

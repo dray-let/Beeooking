@@ -8,6 +8,7 @@ create table clubs (
   timezone text not null default 'America/New_York',
   status text not null default 'active',
   brand_config jsonb not null default '{}'::jsonb,
+  activity_config jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -23,12 +24,27 @@ create table facilities (
   updated_at timestamptz not null default now()
 );
 
-create table courts (
+create table club_activities (
   id uuid primary key,
   club_id uuid not null references clubs(id),
+  name text not null,
+  activity_type text not null,
+  resource_unit text not null,
+  resource_count integer not null default 0,
+  status text not null default 'active',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (club_id, activity_type)
+);
+
+create table bookable_resources (
+  id uuid primary key,
+  club_id uuid not null references clubs(id),
+  club_activity_id uuid not null references club_activities(id),
   facility_id uuid not null references facilities(id),
   name text not null,
-  sport_type text not null,
+  activity_type text not null,
+  resource_unit text not null,
   status text not null default 'active',
   booking_rules jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
@@ -246,7 +262,7 @@ create table sessions (
   program_id uuid references programs(id),
   coach_id uuid references coaches(id),
   facility_id uuid references facilities(id),
-  court_id uuid references courts(id),
+  bookable_resource_id uuid references bookable_resources(id),
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   capacity integer,
@@ -372,7 +388,8 @@ create table message_recipients (
 );
 
 create index facilities_club_id_idx on facilities(club_id);
-create index courts_club_id_idx on courts(club_id);
+create index club_activities_club_id_idx on club_activities(club_id);
+create index bookable_resources_club_id_idx on bookable_resources(club_id);
 create index club_users_club_id_idx on club_users(club_id);
 create index club_users_user_id_idx on club_users(user_id);
 create index family_members_club_family_idx on family_members(club_id, family_id);

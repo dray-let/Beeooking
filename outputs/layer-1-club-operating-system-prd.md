@@ -8,6 +8,7 @@ Build the foundational operating system every club needs before sport-specific d
 
 Layer 1 is successful when a club can:
 
+- Complete Super Admin setup by choosing supported activities from a scrollable menu before defining bookable resource counts.
 - Invite and manage members, parents, coaches, staff, and admins.
 - Group members and family members together, with dependents added after an adult account exists.
 - Collect waivers, emergency contacts, and profile details.
@@ -20,7 +21,7 @@ Layer 1 is successful when a club can:
 - Require completed waivers before bookings, registrations, or participation.
 - Sell and renew memberships.
 - Configure membership privileges and booking rules.
-- Manage facilities, courts, coaches, clinics, camps, and waitlists.
+- Manage facilities, courts, lanes, studios, rinks, tables, rooms, coaches, clinics, camps, and waitlists.
 - Accept payments and issue refunds.
 - Send club announcements and targeted messages.
 - Operate with club-specific branding, pricing, rules, and staff.
@@ -102,6 +103,9 @@ Acceptance criteria:
 Capabilities:
 
 - Court reservations.
+- Swimming lane reservations.
+- Fitness studio reservations.
+- Rink, table, and room reservations.
 - Coach bookings.
 - Clinic bookings.
 - Camp registration.
@@ -110,7 +114,12 @@ Capabilities:
 
 Acceptance criteria:
 
-- A club admin can configure facilities, courts, operating hours, and booking rules.
+- Super Admin must choose supported activity types during club setup before resources are created.
+- Super Admin chooses activity types from a scrollable menu of supported sports and facility uses.
+- Supported racket sport options are tennis, squash, padel, pickleball, table tennis, and badminton.
+- Optional non-racket activity types include swimming, fitness, ice/rink, and multi-purpose room booking.
+- After activity selection, Super Admin enters the number of courts, lanes, studios, rinks, tables, or rooms needed for each selected activity.
+- A club admin can configure facilities, courts, lanes, studios, rinks, tables, rooms, operating hours, and booking rules.
 - A member can book an available court if their membership privileges allow it.
 - A member can only book after all required waivers are complete.
 - A member can book a coach session when the coach is available.

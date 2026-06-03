@@ -194,16 +194,45 @@ Coach:
 Super Admin:
 
 - Can support clubs through audited cross-club workflows.
+- Must choose supported club activities as the first setup step.
+- Can enable racket sports: tennis, squash, padel, pickleball, table tennis, and badminton.
+- Can optionally enable swimming, fitness, ice/rink, and multi-purpose room booking.
+- Must use a scrollable activity menu to choose relevant activities.
+- Must define how many courts, lanes, studios, rinks, tables, or rooms exist under each selected activity.
+
+## Super Admin Club Setup
+
+First setup step:
+
+1. Open a scrollable activity menu with all supported sports and facility uses.
+2. Click each relevant activity.
+3. Enter resource counts for each selected activity.
+4. Create the bookable resources generated from those counts.
+5. Hand off resource naming, schedules, and booking rules to club admin setup.
+
+Activity options:
+
+- Tennis: courts.
+- Squash: courts.
+- Padel: courts.
+- Pickleball: courts.
+- Table tennis: courts or tables.
+- Badminton: courts.
+- Swimming: lanes.
+- Fitness: studios.
+- Ice hockey or skating: rinks.
+- Multi-purpose: rooms.
 
 ## Build Priority
 
-1. Active club context.
-2. Member directory.
-3. Role assignment.
-4. Member & family detail.
-5. Waiver status.
-6. Emergency contact panel.
-7. Setup checklist.
+1. Super Admin activity and resource setup.
+2. Active club context.
+3. Member directory.
+4. Role assignment.
+5. Member & family detail.
+6. Waiver status.
+7. Emergency contact panel.
+8. Setup checklist.
 
 ## Profile Field Rules
 

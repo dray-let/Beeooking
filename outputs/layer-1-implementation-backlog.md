@@ -6,9 +6,10 @@ Goal: Establish the technical foundation for a multi-club SaaS platform.
 
 Stories:
 
+- Define Super Admin club setup for supported activities and resource counts.
 - Define global users, club-scoped user access, and grouped member/family records.
 - Define role assignments for Super Admin, Club Admin, Staff, Coach, Parent, and Member.
-- Define club, facility, court, family, waiver, membership, booking, payment, and message entities.
+- Define club, facility, bookable resource, family, waiver, membership, booking, payment, and message entities.
 - Define tenant scoping rules for every club-owned object.
 - Define initial booking conflict rules.
 - Define Stripe object mapping for customers, subscriptions, payments, invoices, and refunds.
@@ -17,6 +18,9 @@ Stories:
 Acceptance criteria:
 
 - All operational records include `club_id`.
+- Super Admin must select club activities from a scrollable menu before bookable resources are created.
+- Activity options include tennis, squash, padel, pickleball, table tennis, badminton, swimming, fitness, ice/rink, and multi-purpose rooms.
+- Each selected activity captures a resource count and resource unit: courts, lanes, tables, studios, rinks, or rooms.
 - Users can have different roles in different clubs.
 - Club-scoped queries require `club_id`.
 - Super Admin access is explicitly separated from club roles.
@@ -84,7 +88,8 @@ Goal: Let members reserve courts and book coaches, clinics, and waitlists.
 
 Stories:
 
-- As a club admin, I can configure facilities, courts, and booking rules.
+- As a club admin, I can configure facilities, bookable resources, and booking rules.
+- As a club admin, I can configure bookable courts, lanes, tables, studios, rinks, and rooms created from selected activity types.
 - As a member, I can reserve an available court.
 - As a member, I can book an available coach.
 - As a member or parent, I can register for a clinic.
@@ -93,7 +98,7 @@ Stories:
 
 Acceptance criteria:
 
-- Courts and coaches cannot be double-booked.
+- Courts, lanes, tables, studios, rinks, rooms, and coaches cannot be double-booked.
 - Bookings respect club rules and membership privileges.
 - Clinics enforce capacity.
 - Waitlists track order and status.
@@ -114,7 +119,7 @@ Stories:
 Acceptance criteria:
 
 - Programs support type, sport, capacity, pricing, schedule, coach, and facility.
-- Sessions can be attached to courts and coaches.
+- Sessions can be attached to bookable resources and coaches.
 - Attendance can be recorded per participant per session.
 - Program registrations can connect to payments.
 
@@ -143,7 +148,7 @@ Goal: Give club operators visibility into operations and revenue.
 Stories:
 
 - As a club admin, I can view member counts and membership status.
-- As a club admin, I can view booking volume and court utilization.
+- As a club admin, I can view booking volume and resource utilization.
 - As a club admin, I can view program registrations.
 - As a club admin, I can view revenue by product type.
 - As a club admin, I can search and manage members.
@@ -162,7 +167,7 @@ Acceptance criteria:
 3. Implement authentication provider.
 4. Implement club context selector and tenant guard.
 5. Implement role/permission checks.
-6. Build admin CRUD for clubs, facilities, courts, users, families, and waivers.
+6. Build admin CRUD for clubs, facilities, bookable resources, users, families, and waivers.
 7. Build membership plan and membership flows.
 8. Build booking availability and conflict prevention.
 9. Connect Stripe.

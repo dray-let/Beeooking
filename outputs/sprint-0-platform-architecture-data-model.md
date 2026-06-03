@@ -28,11 +28,13 @@ Key fields:
 - `timezone`
 - `status`
 - `brand_config`
+- `activity_config`
 - `created_at`
 
 Relationships:
 
 - Has many facilities.
+- Has many club activities.
 - Has many users through club memberships.
 - Has many membership plans.
 - Has many programs, bookings, payments, and messages.
@@ -52,26 +54,48 @@ Key fields:
 Relationships:
 
 - Belongs to club.
-- Has many courts.
+- Has many bookable resources.
 
-### Court
+### Club Activity
 
-Represents a bookable court.
+Represents an activity selected during Super Admin club setup.
+
+Key fields:
+
+- `id`
+- `club_id`
+- `name`
+- `activity_type`
+- `resource_unit`
+- `resource_count`
+- `status`
+
+Rules:
+
+- Super Admin selects activities from a scrollable menu before resources are created.
+- Activity options include tennis, squash, padel, pickleball, table tennis, badminton, swimming, fitness, ice/rink, and multi-purpose rooms.
+- Resource units include court, lane, studio, rink, table, and room.
+
+### Bookable Resource
+
+Represents a bookable court, lane, studio, rink, table, or room.
 
 Key fields:
 
 - `id`
 - `club_id`
 - `facility_id`
+- `club_activity_id`
 - `name`
-- `sport_type`
+- `activity_type`
+- `resource_unit`
 - `status`
 - `booking_rules`
 
 Relationships:
 
 - Belongs to facility.
-- Has many court bookings.
+- Has many resource bookings.
 
 ### User
 
@@ -346,7 +370,7 @@ Key fields:
 - `program_id`
 - `coach_id`
 - `facility_id`
-- `court_id`
+- `bookable_resource_id`
 - `starts_at`
 - `ends_at`
 - `capacity`
@@ -354,7 +378,7 @@ Key fields:
 Relationships:
 
 - Belongs to program.
-- May belong to coach, facility, and court.
+- May belong to coach, facility, and bookable resource.
 
 ### Program Registration
 
@@ -501,7 +525,7 @@ Cannot:
 
 Can:
 
-- Manage club settings, branding, rules, facilities, courts, and pricing.
+- Manage club settings, branding, rules, facilities, bookable resources, and pricing.
 - Manage members, families, coaches, staff, memberships, bookings, programs, payments, and messages.
 - View club reporting.
 
