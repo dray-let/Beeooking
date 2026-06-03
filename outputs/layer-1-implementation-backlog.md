@@ -6,7 +6,7 @@ Goal: Establish the technical foundation for a multi-club SaaS platform.
 
 Stories:
 
-- Define global users and club-scoped user access.
+- Define global users, club-scoped user access, and grouped member/family records.
 - Define role assignments for Super Admin, Club Admin, Staff, Coach, Parent, and Member.
 - Define club, facility, court, family, waiver, membership, booking, payment, and message entities.
 - Define tenant scoping rules for every club-owned object.
@@ -31,7 +31,7 @@ Stories:
 - As a user, I can create an account and log in.
 - As a club admin, I can invite members, parents, coaches, staff, and admins.
 - As a club admin, I can assign club-specific roles.
-- As a parent, I can create and manage child profiles.
+- As a parent, I can add and manage dependent child profiles after my adult account exists.
 - As a parent, I can sign waivers for my children.
 - As a member, I can manage my own profile.
 - As a club admin, I can view waiver completion status.
@@ -40,7 +40,8 @@ Acceptance criteria:
 
 - Authentication works for all user types.
 - A user can belong to multiple clubs.
-- Family accounts support adults, children, guardians, and billing owner.
+- Members and family members are managed together in one dashboard area.
+- Family groups support adults, dependent children, guardians, and billing owner.
 - Waivers are versioned and linked to signer and subject.
 - Club admins cannot access records from another club.
 
@@ -152,4 +153,3 @@ Acceptance criteria:
 8. Build booking availability and conflict prevention.
 9. Connect Stripe.
 10. Build communications and dashboard.
-

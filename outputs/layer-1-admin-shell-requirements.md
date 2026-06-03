@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the first usable Club Admin surface for Beeooking's Layer 1 Club Operating System. This should become the operational home for club setup, users, family accounts, waivers, emergency contacts, and role management.
+Define the first usable Club Admin surface for Beeooking's Layer 1 Club Operating System. This should become the operational home for club setup, members and family groups, waivers, emergency contacts, and role management.
 
 ## First Screen: Club Admin Home
 
@@ -10,7 +10,7 @@ The admin home should show:
 
 - Active club context.
 - Member count.
-- Family count.
+- Member/family group count.
 - Coach/staff/admin count.
 - Waiver completion rate.
 - Waiver-blocked users.
@@ -23,8 +23,7 @@ The admin home should show:
 Primary navigation:
 
 - Dashboard
-- Members
-- Families
+- Members & Families
 - Coaches & Staff
 - Waivers
 - Emergency Contacts
@@ -57,20 +56,22 @@ Acceptance criteria:
 - Role assignment is scoped to a club.
 - A user can later belong to multiple clubs.
 
-### Create Family
+### Add Dependents To Adult Account
 
 Steps:
 
-1. Club admin creates family record.
-2. Club admin adds adult guardian.
-3. Club admin adds child member.
-4. Club admin sets primary contact.
-5. Club admin sets billing owner if known.
+1. Adult account is created during initial login, registration, or admin invitation.
+2. Adult opens their member/family profile.
+3. Adult or club admin adds a dependent child.
+4. Adult is marked as guardian for the dependent.
+5. Club admin can set primary contact and billing owner if known.
 
 Acceptance criteria:
 
-- Family belongs to one club.
-- Multiple adults and children are supported.
+- Members and family members are managed in one dashboard area.
+- Adding a child is a second-step workflow after adult account creation.
+- Family group belongs to one club.
+- Multiple adults and dependents are supported.
 - Guardian permissions are explicit.
 
 ### Complete Waiver
@@ -148,7 +149,7 @@ Super Admin:
 1. Active club context.
 2. Member directory.
 3. Role assignment.
-4. Family detail.
+4. Member & family detail.
 5. Waiver status.
 6. Emergency contact panel.
 7. Setup checklist.
@@ -161,7 +162,7 @@ The admin shell must show:
 
 - Required waiver templates.
 - Users missing required waivers.
-- Families with children missing required waivers.
+- Family groups with dependents missing required waivers.
 - Activities blocked by waiver status.
 - Date and signer for completed waivers.
 

@@ -9,7 +9,7 @@ Build the foundational operating system every club needs before sport-specific d
 Layer 1 is successful when a club can:
 
 - Invite and manage members, parents, coaches, staff, and admins.
-- Create family accounts with parent-child relationships.
+- Group members and family members together, with dependents added after an adult account exists.
 - Collect waivers, emergency contacts, and profile details.
 - Require completed waivers before bookings, registrations, or participation.
 - Sell and renew memberships.
@@ -37,8 +37,10 @@ Capabilities:
 - Authentication and login.
 - Role-based permissions.
 - Club-scoped user access.
-- Family accounts.
-- Parent-child relationships.
+- Members & families grouped together.
+- Adult accounts first.
+- Dependent profiles added after adult login or invitation.
+- Parent-child/guardian relationships.
 - Member profiles.
 - Emergency contacts.
 - Digital waivers.
@@ -47,7 +49,9 @@ Capabilities:
 Acceptance criteria:
 
 - A user can belong to one or more clubs.
-- A family can contain multiple adults and children.
+- Members and family members are managed in one grouped area, not separate dashboards.
+- A dependent child profile is created only after an adult account exists.
+- A family group can contain multiple adults and dependent children.
 - A parent can manage child profiles, waivers, bookings, and payments.
 - A club admin can assign roles within their club only.
 - A coach can only see club data they are permitted to access.

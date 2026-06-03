@@ -12,8 +12,8 @@ Sprint 1 includes:
 - Club context.
 - Role assignment.
 - Member, parent, coach, staff, and admin profiles.
-- Family account creation.
-- Parent-child relationships.
+- Member/family group management.
+- Dependent creation as a second-step adult workflow after initial login or invitation.
 - Emergency contacts.
 - Waiver templates and signatures.
 - Required waiver enforcement before bookings, program registrations, and participation.
@@ -34,7 +34,8 @@ Sprint 1 excludes:
 - As a club admin, I can invite a user to my club.
 - As a club admin, I can assign a role to a user within my club.
 - As a club admin, I can create and edit member profiles.
-- As a club admin, I can create family accounts.
+- As a club admin, I can manage members and family groups in one area.
+- As a club admin, I can add a dependent to an existing adult account.
 - As a club admin, I can view waiver completion status.
 - As a club admin, I can see which users are blocked because required waivers are incomplete.
 - As a club admin, I can view emergency contact information.
@@ -42,7 +43,8 @@ Sprint 1 excludes:
 ### Parent
 
 - As a parent, I can manage my own profile.
-- As a parent, I can create or manage child profiles in my family.
+- As a parent, I can add dependent child profiles after my adult account is created.
+- As a parent, I can manage child profiles in my family group.
 - As a parent, I can sign waivers for my children.
 - As a parent, I cannot register a child for club activity until required waivers are complete.
 - As a parent, I can add emergency contacts.
@@ -84,7 +86,9 @@ Sprint 1 excludes:
 - A user can belong to more than one club.
 - A user can have different roles in different clubs.
 - A club admin cannot access another club's users, families, waivers, or emergency contacts.
-- A family can include multiple adults and children.
+- Members and family members are grouped together in one dashboard area.
+- A dependent child is created after an adult account exists.
+- A family group can include multiple adults and dependent children.
 - A guardian can sign a waiver for a child.
 - Waiver signatures store waiver version, subject user, signer, timestamp, and status.
 - Required waivers block court booking, coach booking, clinic/camp/course registration, and session participation until completed.
@@ -95,7 +99,8 @@ Sprint 1 excludes:
 
 - Club admin member directory.
 - User profile detail.
-- Family account detail.
+- Member & family detail.
+- Add dependent flow.
 - Waiver template list.
 - Waiver completion report.
 - Waiver-blocked users report.
@@ -116,7 +121,7 @@ Sprint 1 excludes:
 ## Open Decisions
 
 - Authentication provider: Clerk, Supabase Auth, Auth0, or custom.
-- Whether parent-created child profiles require admin approval.
+- Whether parent-created dependent profiles require admin approval.
 - Whether coaches can view emergency contacts by default or only for assigned sessions.
 - Whether family billing owner is required in Sprint 1 or Sprint 2.
 
@@ -127,7 +132,7 @@ Create a minimal admin shell with:
 1. Active club context.
 2. Member directory.
 3. Role assignment.
-4. Family detail.
+4. Member & family detail.
 5. Waiver status.
 6. Emergency contacts.
 

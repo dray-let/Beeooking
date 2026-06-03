@@ -6,7 +6,7 @@ const layerOne = {
     {
       name: "User Management",
       status: "Sprint 1",
-      capabilities: ["Members", "Parents", "Coaches", "Staff", "Admins", "Family accounts", "Waivers", "Emergency contacts"]
+      capabilities: ["Members & families", "Adult accounts", "Dependents after login", "Coaches", "Staff", "Admins", "Waivers", "Emergency contacts"]
     },
     {
       name: "Membership Management",
@@ -52,7 +52,7 @@ const layerOne = {
   sprintOneReadiness: [
     ["Tenant model", "Ready to specify", "Every operational record needs club_id, and every request resolves active club context."],
     ["Roles", "Ready to specify", "Super Admin, Club Admin, Staff, Coach, Parent, and Member need explicit access boundaries."],
-    ["Families", "Needs build detail", "Parent-child and guardian permissions are the core junior-club workflow."],
+    ["Members & families", "Grouped workflow", "Adults are created first, then dependents are added inside the same member/family area after initial login."],
     ["Waivers", "Required access gate", "Required waivers must be completed before booking, program registration, or participation."],
     ["Emergency contacts", "Ready to specify", "Contacts attach to a user inside a club and need controlled coach/admin visibility."]
   ],
@@ -67,7 +67,8 @@ const layerOne = {
     "Club context switcher",
     "Member directory",
     "User profile detail",
-    "Family account detail",
+    "Member & family detail",
+    "Add dependent flow",
     "Role assignment panel",
     "Waiver completion report",
     "Emergency contact panel"
