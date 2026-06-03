@@ -82,10 +82,11 @@ Acceptance criteria:
 
 Steps:
 
-1. Club admin opens a member or family membership.
-2. Club admin reviews every person attached to the membership.
-3. Club admin marks each person as active or non-active.
-4. The system recalculates membership pricing and privileges from participant status.
+1. Member or parent chooses active or non-active status for each person during membership setup.
+2. System calculates estimated pricing and privileges from participant status.
+3. Club admin reviews every person attached to the membership.
+4. Club admin approves or adjusts the final participant statuses and membership type.
+5. System locks participant self-service changes after approval.
 
 Acceptance criteria:
 
@@ -94,7 +95,9 @@ Acceptance criteria:
 - Non-active adults can remain guardians, billing owners, waiver signers, and communication recipients.
 - Active participants receive active-member pricing and privileges.
 - Non-active participants do not receive active playing privileges unless club rules explicitly allow them.
-- The admin shell shows the pricing impact of each participant status change before saving.
+- The admin shell shows the pricing impact of each participant status change before approval.
+- Members and parents cannot self-change active/non-active status after the membership type is approved.
+- After approval, participant status changes require contacting the club admin.
 
 ### Complete Waiver
 

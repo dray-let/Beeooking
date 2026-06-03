@@ -258,6 +258,11 @@ Key fields:
 - `pricing_role`
 - `price_cents`
 - `privileges`
+- `review_status`
+- `selected_by_user_id`
+- `approved_by_user_id`
+- `approved_at`
+- `locked_at`
 - `starts_at`
 - `ends_at`
 
@@ -267,6 +272,9 @@ Rules:
 - Pricing is calculated at the participant level, not only at the family level.
 - A family membership can include a non-active adult account holder and an active child member.
 - Non-active adults can remain guardians, billing owners, waiver signers, and communication recipients without active playing privileges.
+- Members or parents can select active/non-active status during membership setup.
+- Club admins review and approve participant status before the membership type is finalized.
+- Once approved, participant status is locked for self-service and changes require club admin support.
 
 ### Coach
 

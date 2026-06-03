@@ -13,7 +13,8 @@ Layer 1 is successful when a club can:
 - Collect waivers, emergency contacts, and profile details.
 - Require date of birth for every member profile.
 - Support family membership composition of one main member, one spousal member, and dependents under 18.
-- Price memberships by each person's active or non-active membership status.
+- Let members choose active or non-active participants during membership setup, with club admin review before approval.
+- Require members to contact the club admin to change active/non-active participation after membership type is approved.
 - Require completed waivers before bookings, registrations, or participation.
 - Sell and renew memberships.
 - Configure membership privileges and booking rules.
@@ -85,6 +86,9 @@ Acceptance criteria:
 - A family membership can contain active and non-active participants.
 - Pricing is calculated by participant status, so an adult can be non-active while a child on the same family membership is active.
 - Non-active members can remain account holders, guardians, billing owners, waiver signers, and communication recipients without active playing privileges.
+- Members or parents can choose active/non-active status for each participant during membership setup.
+- Club admins review participant status, pricing, and membership type before final approval.
+- Once the membership type is approved, participants cannot self-change active/non-active status and must contact the club admin.
 - Membership privileges can control booking limits, court access, pricing, and registration eligibility.
 - The system can identify active, past due, canceled, and expired memberships.
 

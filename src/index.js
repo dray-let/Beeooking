@@ -64,7 +64,8 @@ const layerOne = {
     "Waiver requirements are club-scoped and preserve waiver version history.",
     "Family memberships support one main member, one spousal member, and additional members only when they are under 18.",
     "Date of birth is mandatory for every member profile so eligibility, protective eyewear, group age restrictions, and family membership rules can be enforced.",
-    "Membership pricing is calculated from each participant's active or non-active membership status."
+    "Members choose active or non-active participants during membership setup, then club admins review and approve the final membership type.",
+    "After membership type is approved, active/non-active changes require contacting the club admin."
   ],
   profileRules: [
     ["Main member", "DOB required", "Every primary adult member must enter date of birth during profile setup."],
@@ -77,9 +78,9 @@ const layerOne = {
     ["Other members", "Under 18 only", "Any additional family members must be dependents under 18 years of age."]
   ],
   membershipPricingRules: [
-    ["Active member", "Priced as active", "Receives member privileges such as court booking, program eligibility, and active-member pricing."],
-    ["Non-active member", "Priced as non-active", "Can remain on the account for billing, family management, waivers, and communications without active playing privileges."],
-    ["Mixed family", "Per-person pricing", "A family can include a non-active adult account holder and an active child member on the same membership."]
+    ["Setup", "Member selects", "The member or parent chooses which people are active or non-active before submitting the membership."],
+    ["Admin review", "Club approves", "Club admin reviews the selected participants, pricing impact, and final membership type before approval."],
+    ["After approval", "Admin change only", "A family can include a non-active adult and active child, but changes after approval require contacting the club admin."]
   ],
   firstAdminScreens: [
     "Club context switcher",
@@ -618,7 +619,7 @@ function renderPage() {
         <section aria-labelledby="membership-pricing-title">
           <div class="section-heading">
             <h2 id="membership-pricing-title">Membership Pricing Rules</h2>
-            <p>Pricing follows each person's active or non-active membership status, even inside one family account.</p>
+            <p>People choose active or non-active status during setup; after admin approval, changes go through the club.</p>
           </div>
           <div class="table-wrap">
             <table>
