@@ -85,6 +85,61 @@ const layerOne = {
     ["Monthly opt-out", "Contact admin", "Members must contact the club admin to opt out of or cancel monthly membership."],
     ["After approval", "Admin change only", "A family can include a non-active adult and active child, but changes after approval require contacting the club admin."]
   ],
+  workflowPrototype: {
+    setupSteps: [
+      ["1", "Adult profile", "Main adult creates the account, enters DOB, contact details, and emergency contact."],
+      ["2", "Add family", "Adult adds spouse or dependent profiles after initial login. DOB is required for every person."],
+      ["3", "Choose participation", "Family chooses who is active or non-active and submits the membership for admin review."],
+      ["4", "Complete waivers", "Required waivers must be signed before bookings, programs, or participation unlock."]
+    ],
+    families: [
+      {
+        id: "letourneau",
+        name: "Letourneau Family",
+        membership: "Family Monthly",
+        reviewStatus: "Pending admin review",
+        waiverStatus: "2 of 3 complete",
+        paymentStatus: "Payment ready",
+        monthlyAction: "Can opt in after payment",
+        members: [
+          ["Danielle Letourneau", "Main member", "Non-active", "DOB complete", "Signed"],
+          ["Avery Letourneau", "Dependent", "Active", "DOB complete", "Missing"],
+          ["Maya Letourneau", "Dependent", "Active", "DOB complete", "Signed"]
+        ]
+      },
+      {
+        id: "chen",
+        name: "Chen Family",
+        membership: "Family Annual",
+        reviewStatus: "Approved and locked",
+        waiverStatus: "All complete",
+        paymentStatus: "Paid",
+        monthlyAction: "Contact admin to change",
+        members: [
+          ["Grace Chen", "Main member", "Active", "DOB complete", "Signed"],
+          ["Leo Chen", "Spousal member", "Non-active", "DOB complete", "Signed"],
+          ["Nina Chen", "Dependent", "Active", "DOB complete", "Signed"]
+        ]
+      },
+      {
+        id: "rivera",
+        name: "Rivera Member",
+        membership: "Monthly Adult",
+        reviewStatus: "Draft setup",
+        waiverStatus: "Missing waiver",
+        paymentStatus: "Awaiting payment",
+        monthlyAction: "Self-service opt-in",
+        members: [
+          ["Sam Rivera", "Main member", "Active", "DOB complete", "Missing"]
+        ]
+      }
+    ],
+    reviewQueue: [
+      ["Letourneau Family", "Review active children with non-active adult", "Approve membership type"],
+      ["Rivera Member", "Payment required before monthly opt-in", "Await payment"],
+      ["Monthly opt-out request", "Member must contact admin to cancel", "Admin review"]
+    ]
+  },
   firstAdminScreens: [
     "Club context switcher",
     "Member directory",
@@ -192,6 +247,101 @@ function renderMembershipPricingRows() {
           <th scope="row">${memberStatus}</th>
           <td><span class="status-chip">${pricingRule}</span></td>
           <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderSetupSteps() {
+  return layerOne.workflowPrototype.setupSteps
+    .map(
+      ([step, title, body]) => `
+        <li class="setup-step">
+          <span>${step}</span>
+          <div>
+            <h4>${title}</h4>
+            <p>${body}</p>
+          </div>
+        </li>
+      `
+    )
+    .join("");
+}
+
+function renderFamilySelector() {
+  return layerOne.workflowPrototype.families
+    .map(
+      (family, index) => `
+        <button class="family-row${index === 0 ? " is-selected" : ""}" type="button" data-family-trigger="${family.id}">
+          <span>
+            <strong>${family.name}</strong>
+            <small>${family.membership}</small>
+          </span>
+          <em>${family.reviewStatus}</em>
+        </button>
+      `
+    )
+    .join("");
+}
+
+function renderParticipantRows(family) {
+  return family.members
+    .map(
+      ([name, role, participation, dob, waiver]) => `
+        <tr>
+          <th scope="row">${name}<small>${role}</small></th>
+          <td>
+            <button class="status-toggle" type="button" data-current-status="${participation}">${participation}</button>
+          </td>
+          <td>${dob}</td>
+          <td><span class="status-chip ${waiver === "Missing" ? "is-warning" : ""}">${waiver}</span></td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderFamilyDetails() {
+  return layerOne.workflowPrototype.families
+    .map(
+      (family, index) => `
+        <article class="family-detail${index === 0 ? " is-active" : ""}" data-family-panel="${family.id}">
+          <div class="detail-header">
+            <div>
+              <h3>${family.name}</h3>
+              <p>${family.membership}</p>
+            </div>
+            <span class="status-chip">${family.reviewStatus}</span>
+          </div>
+          <div class="metric-row">
+            <span><strong>${family.waiverStatus}</strong><small>Waiver status</small></span>
+            <span><strong>${family.paymentStatus}</strong><small>Payment</small></span>
+            <span><strong>${family.monthlyAction}</strong><small>Monthly membership</small></span>
+          </div>
+          <div class="table-wrap is-embedded">
+            <table>
+              <tbody>${renderParticipantRows(family)}</tbody>
+            </table>
+          </div>
+          <div class="action-row">
+            <button type="button">Approve membership type</button>
+            <button type="button" class="secondary-action">Request changes</button>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderReviewQueueRows() {
+  return layerOne.workflowPrototype.reviewQueue
+    .map(
+      ([item, reason, action]) => `
+        <tr>
+          <th scope="row">${item}</th>
+          <td>${reason}</td>
+          <td><span class="status-chip">${action}</span></td>
         </tr>
       `
     )
@@ -505,6 +655,215 @@ function renderPage() {
           color: #5f471f;
         }
 
+        .prototype-shell {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--surface);
+          overflow: hidden;
+        }
+
+        .prototype-tabs {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          padding: 12px;
+          border-bottom: 1px solid var(--line);
+          background: #ffffff;
+        }
+
+        .prototype-tabs button,
+        .action-row button,
+        .family-row,
+        .status-toggle {
+          min-height: 38px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #ffffff;
+          color: var(--ink);
+          font: inherit;
+          font-size: 14px;
+          font-weight: 750;
+          cursor: pointer;
+        }
+
+        .prototype-tabs button {
+          padding: 8px 12px;
+        }
+
+        .prototype-tabs button.is-active,
+        .family-row.is-selected,
+        .action-row button {
+          border-color: var(--accent);
+          background: #dff6f1;
+          color: var(--accent-strong);
+        }
+
+        .prototype-panel {
+          display: none;
+          padding: 18px;
+        }
+
+        .prototype-panel.is-active {
+          display: block;
+        }
+
+        .setup-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 12px;
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+
+        .setup-step {
+          min-height: 138px;
+          padding: 16px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #ffffff;
+        }
+
+        .setup-step span {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          margin-bottom: 12px;
+          border-radius: 999px;
+          background: var(--accent);
+          color: #ffffff;
+          font-weight: 800;
+        }
+
+        .setup-step h4,
+        .family-detail h3 {
+          margin: 0 0 6px;
+          letter-spacing: 0;
+        }
+
+        .setup-step p,
+        .family-detail p {
+          margin: 0;
+          color: var(--muted);
+          line-height: 1.5;
+        }
+
+        .member-workspace {
+          display: grid;
+          grid-template-columns: minmax(240px, 0.42fr) minmax(0, 1fr);
+          gap: 14px;
+        }
+
+        .family-list {
+          display: grid;
+          gap: 8px;
+        }
+
+        .family-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          width: 100%;
+          padding: 12px;
+          text-align: left;
+        }
+
+        .family-row small,
+        .family-row em,
+        th small,
+        .metric-row small {
+          display: block;
+          margin-top: 3px;
+          color: var(--muted);
+          font-size: 12px;
+          font-style: normal;
+          font-weight: 650;
+        }
+
+        .family-detail {
+          display: none;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #ffffff;
+          overflow: hidden;
+        }
+
+        .family-detail.is-active {
+          display: block;
+        }
+
+        .detail-header {
+          display: flex;
+          align-items: start;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 16px;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .metric-row {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 1px;
+          background: var(--line);
+        }
+
+        .metric-row span {
+          min-height: 74px;
+          padding: 14px 16px;
+          background: #ffffff;
+        }
+
+        .metric-row strong {
+          display: block;
+          font-size: 15px;
+        }
+
+        .table-wrap.is-embedded {
+          border-right: 0;
+          border-left: 0;
+          border-radius: 0;
+          background: #ffffff;
+        }
+
+        .status-toggle {
+          min-width: 96px;
+          padding: 7px 10px;
+        }
+
+        .status-toggle[data-current-status="Active"] {
+          border-color: var(--accent);
+          color: var(--accent-strong);
+          background: #dff6f1;
+        }
+
+        .status-chip.is-warning {
+          color: var(--warning);
+          background: var(--warning-soft);
+          border-color: #f2c879;
+        }
+
+        .action-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          padding: 16px;
+          border-top: 1px solid var(--line);
+        }
+
+        .action-row button {
+          padding: 8px 12px;
+        }
+
+        .action-row .secondary-action {
+          border-color: var(--line);
+          background: #ffffff;
+          color: var(--ink);
+        }
+
         footer {
           margin-top: 36px;
           padding-top: 24px;
@@ -517,7 +876,9 @@ function renderPage() {
           header,
           .timeline-row,
           .split-grid,
-          .rule-band {
+          .rule-band,
+          .member-workspace,
+          .metric-row {
             grid-template-columns: 1fr;
           }
 
@@ -543,6 +904,52 @@ function renderPage() {
             <p>Sprint 0 and Sprint 1: tenant model, club objects, roles, profiles, family accounts, waivers, and emergency contacts.</p>
           </aside>
         </header>
+
+        <section aria-labelledby="prototype-title">
+          <div class="section-heading">
+            <h2 id="prototype-title">Sprint 1 Workflow Prototype</h2>
+            <p>Start with the Members & Families surface: setup, participant status, admin review, waivers, and monthly membership rules.</p>
+          </div>
+          <div class="prototype-shell">
+            <div class="prototype-tabs" role="tablist" aria-label="Sprint 1 workflow">
+              <button class="is-active" type="button" data-prototype-tab="setup">Member setup</button>
+              <button type="button" data-prototype-tab="families">Members & families</button>
+              <button type="button" data-prototype-tab="review">Admin review</button>
+              <button type="button" data-prototype-tab="monthly">Monthly rules</button>
+            </div>
+            <div class="prototype-panel is-active" data-prototype-panel="setup">
+              <ol class="setup-list">${renderSetupSteps()}</ol>
+            </div>
+            <div class="prototype-panel" data-prototype-panel="families">
+              <div class="member-workspace">
+                <div class="family-list">${renderFamilySelector()}</div>
+                <div>${renderFamilyDetails()}</div>
+              </div>
+            </div>
+            <div class="prototype-panel" data-prototype-panel="review">
+              <div class="table-wrap">
+                <table>
+                  <tbody>${renderReviewQueueRows()}</tbody>
+                </table>
+              </div>
+            </div>
+            <div class="prototype-panel" data-prototype-panel="monthly">
+              <div class="rule-band">
+                <div>
+                  <span class="label">Monthly</span>
+                  <h2>Opt In Is Self-Service. Opt Out Is Admin Reviewed.</h2>
+                  <p>Members can start monthly membership by paying. Canceling or opting out routes through the club admin.</p>
+                </div>
+                <ul>
+                  <li>Self-service monthly opt-in after completed payment.</li>
+                  <li>Admin contact required for monthly opt-out or cancellation.</li>
+                  <li>Payment status and membership status stay separate.</li>
+                  <li>Approved membership type locks active/non-active self-service changes.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section aria-labelledby="modules-title">
           <div class="section-heading">
@@ -598,7 +1005,7 @@ function renderPage() {
         <section aria-labelledby="profile-rules-title">
           <div class="section-heading">
             <h2 id="profile-rules-title">Profile Field Rules</h2>
-            <p>Keep adult onboarding lightweight while still collecting birth dates when age-based rules matter.</p>
+            <p>Date of birth is required for every member profile so family, waiver, and age-based rules can be enforced.</p>
           </div>
           <div class="table-wrap">
             <table>
@@ -643,6 +1050,35 @@ function renderPage() {
           JSON data is available at <code>/api/layer-1</code>. Planning artifacts are in the repository outputs folder.
         </footer>
       </main>
+      <script>
+        const tabButtons = document.querySelectorAll("[data-prototype-tab]");
+        const tabPanels = document.querySelectorAll("[data-prototype-panel]");
+        tabButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const tab = button.dataset.prototypeTab;
+            tabButtons.forEach((item) => item.classList.toggle("is-active", item === button));
+            tabPanels.forEach((panel) => panel.classList.toggle("is-active", panel.dataset.prototypePanel === tab));
+          });
+        });
+
+        const familyButtons = document.querySelectorAll("[data-family-trigger]");
+        const familyPanels = document.querySelectorAll("[data-family-panel]");
+        familyButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const familyId = button.dataset.familyTrigger;
+            familyButtons.forEach((item) => item.classList.toggle("is-selected", item === button));
+            familyPanels.forEach((panel) => panel.classList.toggle("is-active", panel.dataset.familyPanel === familyId));
+          });
+        });
+
+        document.querySelectorAll("[data-current-status]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const nextStatus = button.dataset.currentStatus === "Active" ? "Non-active" : "Active";
+            button.dataset.currentStatus = nextStatus;
+            button.textContent = nextStatus;
+          });
+        });
+      </script>
     </body>
   </html>`;
 }
@@ -666,6 +1102,7 @@ export default {
         profileRules: layerOne.profileRules,
         familyMembershipRules: layerOne.familyMembershipRules,
         membershipPricingRules: layerOne.membershipPricingRules,
+        workflowPrototype: layerOne.workflowPrototype,
         firstAdminScreens: layerOne.firstAdminScreens
       }, null, 2), {
         headers: {
