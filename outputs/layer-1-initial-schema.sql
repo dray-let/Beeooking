@@ -9,6 +9,8 @@ create table clubs (
   status text not null default 'active',
   brand_config jsonb not null default '{}'::jsonb,
   activity_config jsonb not null default '{}'::jsonb,
+  organization_email_domain text,
+  staff_email_domain_required boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -82,6 +84,7 @@ create table role_assignments (
   club_id uuid references clubs(id),
   user_id uuid not null references users(id),
   role text not null,
+  validation_metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   unique (club_id, user_id, role)
 );

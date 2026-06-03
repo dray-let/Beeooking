@@ -7,6 +7,7 @@ Goal: Establish the technical foundation for a multi-club SaaS platform.
 Stories:
 
 - Define Super Admin club setup for supported activities and resource counts.
+- Define approved organization email domain setup for staff-side roles.
 - Define global users, club-scoped user access, and grouped member/family records.
 - Define role assignments for Super Admin, Club Admin, Staff, Coach, Parent, and Member.
 - Define club, facility, bookable resource, family, waiver, membership, booking, payment, and message entities.
@@ -19,11 +20,13 @@ Acceptance criteria:
 
 - All operational records include `club_id`.
 - Super Admin must select club activities from a scrollable menu before bookable resources are created.
+- Super Admin must choose the approved organization email domain for Super Admin, Club Admin, Coach, and Staff accounts.
 - Activity options include tennis, squash, padel, pickleball, table tennis, badminton, swimming, fitness, ice/rink, and multi-purpose rooms.
 - Each selected activity captures a resource count and resource unit: courts, lanes, tables, studios, rinks, or rooms.
 - Users can have different roles in different clubs.
 - Club-scoped queries require `club_id`.
 - Super Admin access is explicitly separated from club roles.
+- Super Admin, Club Admin, Coach, and Staff role assignments require an email from the approved organization domain.
 - Initial schema can support Sprint 1 without structural rework.
 
 ## Sprint 1: Foundation
@@ -43,6 +46,7 @@ Stories:
 Acceptance criteria:
 
 - Authentication works for all user types.
+- Staff-side role invites validate against the approved organization email domain.
 - A user can belong to multiple clubs.
 - Members and family members are managed together in one dashboard area.
 - All member profiles require date of birth.

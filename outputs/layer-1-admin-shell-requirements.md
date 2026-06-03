@@ -57,6 +57,9 @@ Acceptance criteria:
 - Role assignment is scoped to a club.
 - A user can later belong to multiple clubs.
 - Date of birth is required for every member profile.
+- Super Admin, Club Admin, Staff, and Coach invitations must use the approved organization email domain.
+- Parent and Member invitations may use personal email addresses unless the club config says otherwise.
+- The invite flow blocks staff-side role assignment when the email domain does not match the approved organization domain.
 
 ### Add Dependents To Adult Account
 
@@ -195,6 +198,7 @@ Super Admin:
 
 - Can support clubs through audited cross-club workflows.
 - Must choose supported club activities as the first setup step.
+- Must choose the approved organization email domain during club setup.
 - Can enable racket sports: tennis, squash, padel, pickleball, table tennis, and badminton.
 - Can optionally enable swimming, fitness, ice/rink, and multi-purpose room booking.
 - Must use a scrollable activity menu to choose relevant activities.
@@ -208,7 +212,8 @@ First setup step:
 2. Click each relevant activity.
 3. Enter resource counts for each selected activity.
 4. Create the bookable resources generated from those counts.
-5. Hand off resource naming, schedules, and booking rules to club admin setup.
+5. Enter the approved organization email domain for Super Admin, Club Admin, Coach, and Staff accounts.
+6. Hand off resource naming, schedules, and booking rules to club admin setup.
 
 Activity options:
 
@@ -222,6 +227,13 @@ Activity options:
 - Fitness: studios.
 - Ice hockey or skating: rinks.
 - Multi-purpose: rooms.
+
+Organization email rule:
+
+- Super Admin chooses one approved organization email domain during club setup.
+- Super Admin, Club Admin, Coach, and Staff accounts must use that organization domain.
+- Parents and members can use personal emails unless the club config requires otherwise.
+- Staff-side role invites are blocked when the invited email does not match the approved domain.
 
 ## Build Priority
 

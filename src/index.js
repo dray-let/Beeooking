@@ -49,6 +49,12 @@ const layerOne = {
     "Message"
   ],
   roles: ["Super Admin", "Club Admin", "Staff", "Coach", "Parent", "Member"],
+  organizationEmailRules: [
+    ["Domain selection", "Super Admin", "Super Admin chooses the approved organization email domain during club setup."],
+    ["Required roles", "Org email required", "Super Admin, Club Admin, Staff, and Coach accounts must use an email from the approved organization domain."],
+    ["Member roles", "Personal email allowed", "Parents and members can use personal emails unless a club chooses stricter rules."],
+    ["Invite validation", "Block mismatch", "Invites for Super Admin, Club Admin, Coach, and Staff roles are blocked when the email domain does not match the selected organization domain."]
+  ],
   activityOptions: [
     ["Tennis", "court", true, 4],
     ["Squash", "court", true, 6],
@@ -281,6 +287,20 @@ function renderActivitySetupRows() {
         <tr>
           <th scope="row">${activityType}</th>
           <td><span class="status-chip">${resourceUnit}</span></td>
+          <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderOrganizationEmailRows() {
+  return layerOne.organizationEmailRules
+    .map(
+      ([rule, requirement, body]) => `
+        <tr>
+          <th scope="row">${rule}</th>
+          <td><span class="status-chip">${requirement}</span></td>
           <td>${body}</td>
         </tr>
       `
@@ -1127,6 +1147,18 @@ function renderPage() {
           </div>
         </section>
 
+        <section aria-labelledby="email-domain-title">
+          <div class="section-heading">
+            <h2 id="email-domain-title">Organization Email Domain</h2>
+            <p>Super Admin chooses the club email domain, then staff-side roles must use that organization email.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderOrganizationEmailRows()}</tbody>
+            </table>
+          </div>
+        </section>
+
         <section class="rule-band" aria-labelledby="rules-title">
           <div>
             <span class="label">Required</span>
@@ -1292,6 +1324,7 @@ export default {
       return new Response(JSON.stringify({
         readiness: layerOne.sprintOneReadiness,
         rules: layerOne.layerOneRules,
+        organizationEmailRules: layerOne.organizationEmailRules,
         activityOptions: layerOne.activityOptions,
         activitySetupRules: layerOne.activitySetupRules,
         profileRules: layerOne.profileRules,

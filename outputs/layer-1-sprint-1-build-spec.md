@@ -35,6 +35,7 @@ Sprint 1 excludes:
 
 - As a club admin, I can invite a user to my club.
 - As a club admin, I can assign a role to a user within my club.
+- As a club admin, I can only invite Super Admin, Club Admin, Staff, or Coach users with the approved organization email domain.
 - As a club admin, I can create and edit member profiles.
 - As a club admin, I require date of birth for every member profile.
 - As a club admin, I can manage members and family groups in one area.
@@ -92,6 +93,8 @@ Sprint 1 excludes:
 - A user can belong to more than one club.
 - A user can have different roles in different clubs.
 - A club admin cannot access another club's users, families, waivers, or emergency contacts.
+- Super Admin, Club Admin, Staff, and Coach accounts require the approved organization email domain.
+- Parent and Member accounts can use personal email addresses unless the club config requires otherwise.
 - Members and family members are grouped together in one dashboard area.
 - A dependent child is created after an adult account exists.
 - A family membership can include one main member and one spousal member.

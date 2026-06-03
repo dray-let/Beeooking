@@ -29,6 +29,8 @@ Key fields:
 - `status`
 - `brand_config`
 - `activity_config`
+- `organization_email_domain`
+- `staff_email_domain_required`
 - `created_at`
 
 Relationships:
@@ -73,6 +75,9 @@ Key fields:
 Rules:
 
 - Super Admin selects activities from a scrollable menu before resources are created.
+- Super Admin chooses the approved organization email domain during club setup.
+- Super Admin, Club Admin, Staff, and Coach roles require an email from the approved organization domain.
+- Parent and Member roles may use personal email addresses unless the club config requires otherwise.
 - Activity options include tennis, squash, padel, pickleball, table tennis, badminton, swimming, fitness, ice/rink, and multi-purpose rooms.
 - Resource units include court, lane, studio, rink, table, and room.
 
@@ -141,6 +146,23 @@ Relationships:
 - Belongs to club.
 - Belongs to user.
 - Has many role assignments.
+
+### Role Assignment
+
+Represents a user's role inside a club.
+
+Key fields:
+
+- `id`
+- `club_id`
+- `user_id`
+- `role`
+- `validation_metadata`
+
+Rules:
+
+- Super Admin, Club Admin, Staff, and Coach role assignments require an email from the club's approved organization domain.
+- Validation metadata should record whether the organization domain check passed and which domain was used.
 
 ### Family
 

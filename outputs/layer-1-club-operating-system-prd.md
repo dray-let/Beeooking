@@ -9,6 +9,7 @@ Build the foundational operating system every club needs before sport-specific d
 Layer 1 is successful when a club can:
 
 - Complete Super Admin setup by choosing supported activities from a scrollable menu before defining bookable resource counts.
+- Complete Super Admin setup by choosing the approved organization email domain for staff-side roles.
 - Invite and manage members, parents, coaches, staff, and admins.
 - Group members and family members together, with dependents added after an adult account exists.
 - Collect waivers, emergency contacts, and profile details.
@@ -64,6 +65,9 @@ Acceptance criteria:
 - Additional family membership members must be dependents under 18.
 - A parent can manage child profiles, waivers, bookings, and payments.
 - A club admin can assign roles within their club only.
+- Super Admin, Club Admin, Staff, and Coach accounts must use an email address from the approved organization domain.
+- Super Admin chooses the approved organization email domain during club setup.
+- Invites for Super Admin, Club Admin, Staff, and Coach roles are blocked when the email domain does not match the approved organization domain.
 - A coach can only see club data they are permitted to access.
 - Every waiver stores status, signer, signed timestamp, and version.
 - One family waiver can cover every member in the family when the waiver text states the signer is responsible for all listed family members.
