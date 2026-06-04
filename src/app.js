@@ -1199,6 +1199,7 @@ export function renderAppShell() {
         <nav class="tabs" aria-label="App foundation views">
           <button class="is-active" data-app-tab="setup" type="button">Club Setup</button>
           <button data-app-tab="families" type="button">Members & Families</button>
+          <button data-app-tab="review" type="button">Admin Review</button>
           <button data-app-tab="waivers" type="button">Waiver Gate</button>
           <button data-app-tab="resources" type="button">Resources</button>
         </nav>
@@ -1245,6 +1246,14 @@ export function renderAppShell() {
             </form>
           </div>
           <div class="families" data-families-list></div>
+        </section>
+
+        <section class="view" data-app-panel="review">
+          <div class="panel">
+            <h2>Admin Review Queue</h2>
+            <p>Club Admin and Super Admin approve family membership status after active and non-active members are chosen.</p>
+            <div class="families" data-review-list></div>
+          </div>
         </section>
 
         <section class="view" data-app-panel="waivers">
@@ -1329,7 +1338,30 @@ export function renderAppShell() {
           renderStats(families);
           document.querySelector("[data-families-list]").innerHTML = families.map((family) => familyCard(family, true)).join("");
           document.querySelector("[data-waiver-list]").innerHTML = families.map((family) => familyCard(family, false)).join("");
+          renderReviewQueue(families);
           bindFamilyActions();
+        }
+
+        function renderReviewQueue(families) {
+          const reviewFamilies = families.filter((family) => family.reviewStatus.includes("pending") || family.reviewStatus === "draft");
+          document.querySelector("[data-review-list]").innerHTML = reviewFamilies.length ? reviewFamilies.map(reviewCard).join("") :
+            "<div class='notice'>No family records need admin review.</div>";
+        }
+
+        function reviewCard(family) {
+          const active = family.members.filter((member) => member.participationStatus === "active").length;
+          const inactive = family.members.filter((member) => member.participationStatus === "non_active").length;
+          const rows = family.members.map((member) =>
+            "<tr><th>" + escapeHtml(member.firstName + " " + member.lastName) + "<small>" + escapeHtml(member.relationship) + "</small></th>" +
+            "<td>" + escapeHtml(member.dateOfBirth) + "</td><td>" + escapeHtml(member.participationStatus) + "</td></tr>"
+          ).join("");
+          return "<article class='family-card'><div class='family-head'><div><h3>" + escapeHtml(family.name) + "</h3>" +
+            "<p>" + active + " active - " + inactive + " non-active - " + escapeHtml(family.paymentStatus) + "</p></div>" +
+            "<span class='badge " + (family.waiverStatus.status === "blocked" ? "warn" : "") + "'>" + escapeHtml(family.reviewStatus) + "</span></div>" +
+            "<div class='family-body'><table><tbody>" + rows + "</tbody></table></div>" +
+            "<div class='family-actions actions'><button type='button' class='primary' data-review-family='" + family.id + "'>Approve and lock</button>" +
+            "<button type='button' data-return-family='" + family.id + "'>Return for changes</button></div>" +
+            "<div class='notice " + (family.waiverStatus.status === "blocked" ? "warn" : "") + "'>" + escapeHtml(family.waiverStatus.label) + "</div></article>";
         }
 
         function familyCard(family, includeMemberForm) {
@@ -1337,7 +1369,7 @@ export function renderAppShell() {
           const members = family.members.map((member) =>
             "<tr><th>" + escapeHtml(member.firstName + " " + member.lastName) + "<small>" + escapeHtml(member.relationship) + "</small>" +
             (member.emergencyContacts || []).map((contact) =>
-              "<span class='contact-line'>" + escapeHtml(contact.name) + " · " + escapeHtml(contact.phone) + "</span>"
+              "<span class='contact-line'>" + escapeHtml(contact.name) + " - " + escapeHtml(contact.phone) + "</span>"
             ).join("") + "</th>" +
             "<td>" + escapeHtml(member.dateOfBirth) + "</td><td>" + escapeHtml(member.participationStatus) + "</td></tr>"
           ).join("");
@@ -1423,6 +1455,16 @@ export function renderAppShell() {
             button.addEventListener("click", async () => {
               try {
                 await api("/api/clubs/" + state.clubId + "/families/" + button.dataset.reviewFamily + "/review", { method: "POST", body: JSON.stringify({ reviewStatus: "approved_and_locked" }) });
+                await load();
+              } catch (error) {
+                alert(error.message);
+              }
+            });
+          });
+          document.querySelectorAll("[data-return-family]").forEach((button) => {
+            button.addEventListener("click", async () => {
+              try {
+                await api("/api/clubs/" + state.clubId + "/families/" + button.dataset.returnFamily + "/review", { method: "POST", body: JSON.stringify({ reviewStatus: "changes_requested" }) });
                 await load();
               } catch (error) {
                 alert(error.message);

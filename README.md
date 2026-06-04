@@ -21,6 +21,7 @@ The app foundation now has:
 - Add dependent/spousal member flow with date-of-birth validation.
 - Save emergency contacts per family member.
 - Family membership review action.
+- Clickable Admin Review queue for pending/draft family records.
 - Family waiver signing.
 - Booking gate check that blocks when waiver is missing.
 - D1-ready migration in `migrations/0001_layer1_foundation.sql`.
