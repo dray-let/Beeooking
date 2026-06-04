@@ -6,9 +6,11 @@ Goal: Establish the technical foundation for a multi-club SaaS platform.
 
 Stories:
 
-- Define global users and club-scoped user access.
+- Define Super Admin club setup for supported activities and resource counts.
+- Define approved organization email domain setup for staff-side roles.
+- Define global users, club-scoped user access, and grouped member/family records.
 - Define role assignments for Super Admin, Club Admin, Staff, Coach, Parent, and Member.
-- Define club, facility, court, family, waiver, membership, booking, payment, and message entities.
+- Define club, facility, bookable resource, family, waiver, membership, booking, payment, and message entities.
 - Define tenant scoping rules for every club-owned object.
 - Define initial booking conflict rules.
 - Define Stripe object mapping for customers, subscriptions, payments, invoices, and refunds.
@@ -17,9 +19,14 @@ Stories:
 Acceptance criteria:
 
 - All operational records include `club_id`.
+- Super Admin must select club activities from a scrollable menu before bookable resources are created.
+- Super Admin must choose the approved organization email domain for Super Admin, Club Admin, Coach, and Staff accounts.
+- Activity options include tennis, squash, padel, pickleball, table tennis, badminton, swimming, fitness, ice/rink, and multi-purpose rooms.
+- Each selected activity captures a resource count and resource unit: courts, lanes, tables, studios, rinks, or rooms.
 - Users can have different roles in different clubs.
 - Club-scoped queries require `club_id`.
 - Super Admin access is explicitly separated from club roles.
+- Super Admin, Club Admin, Coach, and Staff role assignments require an email from the approved organization domain.
 - Initial schema can support Sprint 1 without structural rework.
 
 ## Sprint 1: Foundation
@@ -31,17 +38,21 @@ Stories:
 - As a user, I can create an account and log in.
 - As a club admin, I can invite members, parents, coaches, staff, and admins.
 - As a club admin, I can assign club-specific roles.
-- As a parent, I can create and manage child profiles.
-- As a parent, I can sign waivers for my children.
+- As a parent, I can add and manage dependent child profiles after my adult account exists.
+- As a parent, I can sign one family waiver when the waiver states I am responsible for all listed family members.
 - As a member, I can manage my own profile.
 - As a club admin, I can view waiver completion status.
 
 Acceptance criteria:
 
 - Authentication works for all user types.
+- Staff-side role invites validate against the approved organization email domain.
 - A user can belong to multiple clubs.
-- Family accounts support adults, children, guardians, and billing owner.
-- Waivers are versioned and linked to signer and subject.
+- Members and family members are managed together in one dashboard area.
+- All member profiles require date of birth.
+- Family memberships support one main member, one spousal member, dependent children under 18, guardians, and billing owner.
+- One family waiver can cover every listed family member when the waiver text states signer responsibility for the full family.
+- Waivers are versioned and linked to signer plus covered family or individual subject.
 - Club admins cannot access records from another club.
 
 ## Sprint 2: Membership System
@@ -52,7 +63,12 @@ Stories:
 
 - As a club admin, I can create monthly, annual, junior, and family membership plans.
 - As a club admin, I can define membership privileges.
+- As a parent or member, I can choose who is active or non-active during membership setup.
 - As a parent or member, I can purchase a membership.
+- As a member, I can opt into monthly membership on my own by completing payment.
+- As a member, I can request monthly membership opt-out by contacting the club admin.
+- As a club admin, I can mark each person on a membership as active or non-active for pricing and privileges.
+- As a club admin, I can review and approve the final membership type.
 - As a club admin, I can view active, expired, canceled, and past-due memberships.
 - As a system, I can handle renewals and membership status updates.
 
@@ -60,6 +76,13 @@ Acceptance criteria:
 
 - Membership plans support pricing, billing interval, eligibility, and privileges.
 - Memberships can be owned by a user or family.
+- Family memberships enforce one main member, one spousal member, and additional members only when under 18.
+- Membership pricing is based on each participant's active or non-active status.
+- A family membership can include a non-active adult and an active child.
+- Club admin review is required before the membership type is finalized.
+- Once finalized, active/non-active participant changes require club admin support.
+- Monthly membership opt-in is self-service after payment.
+- Monthly membership opt-out requires club admin review.
 - Membership status is updated from payment/subscription events.
 - Members with inactive memberships are restricted according to club rules.
 
@@ -69,7 +92,8 @@ Goal: Let members reserve courts and book coaches, clinics, and waitlists.
 
 Stories:
 
-- As a club admin, I can configure facilities, courts, and booking rules.
+- As a club admin, I can configure facilities, bookable resources, and booking rules.
+- As a club admin, I can configure bookable courts, lanes, tables, studios, rinks, and rooms created from selected activity types.
 - As a member, I can reserve an available court.
 - As a member, I can book an available coach.
 - As a member or parent, I can register for a clinic.
@@ -78,7 +102,7 @@ Stories:
 
 Acceptance criteria:
 
-- Courts and coaches cannot be double-booked.
+- Courts, lanes, tables, studios, rinks, rooms, and coaches cannot be double-booked.
 - Bookings respect club rules and membership privileges.
 - Clinics enforce capacity.
 - Waitlists track order and status.
@@ -99,7 +123,7 @@ Stories:
 Acceptance criteria:
 
 - Programs support type, sport, capacity, pricing, schedule, coach, and facility.
-- Sessions can be attached to courts and coaches.
+- Sessions can be attached to bookable resources and coaches.
 - Attendance can be recorded per participant per session.
 - Program registrations can connect to payments.
 
@@ -128,7 +152,7 @@ Goal: Give club operators visibility into operations and revenue.
 Stories:
 
 - As a club admin, I can view member counts and membership status.
-- As a club admin, I can view booking volume and court utilization.
+- As a club admin, I can view booking volume and resource utilization.
 - As a club admin, I can view program registrations.
 - As a club admin, I can view revenue by product type.
 - As a club admin, I can search and manage members.
@@ -147,9 +171,8 @@ Acceptance criteria:
 3. Implement authentication provider.
 4. Implement club context selector and tenant guard.
 5. Implement role/permission checks.
-6. Build admin CRUD for clubs, facilities, courts, users, families, and waivers.
+6. Build admin CRUD for clubs, facilities, bookable resources, users, families, and waivers.
 7. Build membership plan and membership flows.
 8. Build booking availability and conflict prevention.
 9. Connect Stripe.
 10. Build communications and dashboard.
-

@@ -28,11 +28,15 @@ Key fields:
 - `timezone`
 - `status`
 - `brand_config`
+- `activity_config`
+- `organization_email_domain`
+- `staff_email_domain_required`
 - `created_at`
 
 Relationships:
 
 - Has many facilities.
+- Has many club activities.
 - Has many users through club memberships.
 - Has many membership plans.
 - Has many programs, bookings, payments, and messages.
@@ -52,26 +56,51 @@ Key fields:
 Relationships:
 
 - Belongs to club.
-- Has many courts.
+- Has many bookable resources.
 
-### Court
+### Club Activity
 
-Represents a bookable court.
+Represents an activity selected during Super Admin club setup.
+
+Key fields:
+
+- `id`
+- `club_id`
+- `name`
+- `activity_type`
+- `resource_unit`
+- `resource_count`
+- `status`
+
+Rules:
+
+- Super Admin selects activities from a scrollable menu before resources are created.
+- Super Admin chooses the approved organization email domain during club setup.
+- Super Admin, Club Admin, Staff, and Coach roles require an email from the approved organization domain.
+- Parent and Member roles may use personal email addresses unless the club config requires otherwise.
+- Activity options include tennis, squash, padel, pickleball, table tennis, badminton, swimming, fitness, ice/rink, and multi-purpose rooms.
+- Resource units include court, lane, studio, rink, table, and room.
+
+### Bookable Resource
+
+Represents a bookable court, lane, studio, rink, table, or room.
 
 Key fields:
 
 - `id`
 - `club_id`
 - `facility_id`
+- `club_activity_id`
 - `name`
-- `sport_type`
+- `activity_type`
+- `resource_unit`
 - `status`
 - `booking_rules`
 
 Relationships:
 
 - Belongs to facility.
-- Has many court bookings.
+- Has many resource bookings.
 
 ### User
 
@@ -94,6 +123,11 @@ Relationships:
 - May belong to one or more families.
 - May be a parent, member, coach, staff member, or admin depending on club context.
 
+Profile rule:
+
+- `date_of_birth` is required for all member profiles.
+- `date_of_birth` supports squash protective eyewear requirements, group age restrictions, and dependent under-18 family membership validation.
+
 ### Club User
 
 Joins a global user to a specific club with status and profile context.
@@ -113,6 +147,23 @@ Relationships:
 - Belongs to user.
 - Has many role assignments.
 
+### Role Assignment
+
+Represents a user's role inside a club.
+
+Key fields:
+
+- `id`
+- `club_id`
+- `user_id`
+- `role`
+- `validation_metadata`
+
+Rules:
+
+- Super Admin, Club Admin, Staff, and Coach role assignments require an email from the club's approved organization domain.
+- Validation metadata should record whether the organization domain check passed and which domain was used.
+
 ### Family
 
 Represents a household or billing group.
@@ -130,6 +181,12 @@ Relationships:
 - Belongs to club.
 - Has many family members.
 - Can hold family memberships.
+
+Composition rule:
+
+- A family membership can include one main member.
+- A family membership can include one spousal member.
+- Additional family membership members must be dependents under 18 years of age.
 
 ### Family Member
 
@@ -160,6 +217,8 @@ Key fields:
 - `name`
 - `version`
 - `body`
+- `default_coverage_scope`
+- `responsibility_statement`
 - `status`
 
 Relationships:
@@ -169,7 +228,7 @@ Relationships:
 
 ### Waiver Signature
 
-Represents a signed waiver for a user, usually signed by an adult or guardian.
+Represents a signed waiver for a family or user, usually signed by an adult or guardian.
 
 Key fields:
 
@@ -177,6 +236,8 @@ Key fields:
 - `club_id`
 - `waiver_id`
 - `subject_user_id`
+- `covered_family_id`
+- `coverage_scope`
 - `signed_by_user_id`
 - `signed_at`
 - `status`
@@ -184,7 +245,13 @@ Key fields:
 Relationships:
 
 - Belongs to waiver.
-- Links the player/member and signer.
+- Links the covered family or player/member and signer.
+
+Rules:
+
+- One family waiver can cover every listed family member when the waiver text states the signer is responsible for all covered members.
+- Individual waiver coverage is still supported when a waiver is not family-scoped.
+- Coverage scope and historical waiver version must be preserved.
 
 ### Membership Plan
 
@@ -199,6 +266,9 @@ Key fields:
 - `price_cents`
 - `currency`
 - `eligibility_rules`
+- `pricing_rules`
+- `self_service_opt_in`
+- `admin_required_for_opt_out`
 - `privileges`
 - `status`
 
@@ -206,6 +276,11 @@ Relationships:
 
 - Belongs to club.
 - Has many memberships.
+
+Rules:
+
+- Monthly membership plans can allow self-service opt-in after payment.
+- Monthly membership opt-out requires club admin contact and review.
 
 ### Membership
 
@@ -229,6 +304,40 @@ Relationships:
 - Belongs to club.
 - Belongs to membership plan.
 - Owner is either user or family.
+- Has many membership participants.
+
+### Membership Participant
+
+Represents one person attached to a membership for pricing and privileges.
+
+Key fields:
+
+- `id`
+- `club_id`
+- `membership_id`
+- `user_id`
+- `family_member_id`
+- `participation_status`
+- `pricing_role`
+- `price_cents`
+- `privileges`
+- `review_status`
+- `selected_by_user_id`
+- `approved_by_user_id`
+- `approved_at`
+- `locked_at`
+- `starts_at`
+- `ends_at`
+
+Rules:
+
+- `participation_status` supports active and non-active values.
+- Pricing is calculated at the participant level, not only at the family level.
+- A family membership can include a non-active adult account holder and an active child member.
+- Non-active adults can remain guardians, billing owners, waiver signers, and communication recipients without active playing privileges.
+- Members or parents can select active/non-active status during membership setup.
+- Club admins review and approve participant status before the membership type is finalized.
+- Once approved, participant status is locked for self-service and changes require club admin support.
 
 ### Coach
 
@@ -283,7 +392,7 @@ Key fields:
 - `program_id`
 - `coach_id`
 - `facility_id`
-- `court_id`
+- `bookable_resource_id`
 - `starts_at`
 - `ends_at`
 - `capacity`
@@ -291,7 +400,7 @@ Key fields:
 Relationships:
 
 - Belongs to program.
-- May belong to coach, facility, and court.
+- May belong to coach, facility, and bookable resource.
 
 ### Program Registration
 
@@ -438,7 +547,7 @@ Cannot:
 
 Can:
 
-- Manage club settings, branding, rules, facilities, courts, and pricing.
+- Manage club settings, branding, rules, facilities, bookable resources, and pricing.
 - Manage members, families, coaches, staff, memberships, bookings, programs, payments, and messages.
 - View club reporting.
 

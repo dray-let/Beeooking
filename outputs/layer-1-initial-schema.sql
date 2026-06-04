@@ -8,6 +8,9 @@ create table clubs (
   timezone text not null default 'America/New_York',
   status text not null default 'active',
   brand_config jsonb not null default '{}'::jsonb,
+  activity_config jsonb not null default '{}'::jsonb,
+  organization_email_domain text,
+  staff_email_domain_required boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -23,12 +26,27 @@ create table facilities (
   updated_at timestamptz not null default now()
 );
 
-create table courts (
+create table club_activities (
   id uuid primary key,
   club_id uuid not null references clubs(id),
+  name text not null,
+  activity_type text not null,
+  resource_unit text not null,
+  resource_count integer not null default 0,
+  status text not null default 'active',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (club_id, activity_type)
+);
+
+create table bookable_resources (
+  id uuid primary key,
+  club_id uuid not null references clubs(id),
+  club_activity_id uuid not null references club_activities(id),
   facility_id uuid not null references facilities(id),
   name text not null,
-  sport_type text not null,
+  activity_type text not null,
+  resource_unit text not null,
   status text not null default 'active',
   booking_rules jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
@@ -41,7 +59,8 @@ create table users (
   phone text,
   first_name text not null,
   last_name text not null,
-  date_of_birth date,
+  -- Required for every member profile to enforce age-based club rules.
+  date_of_birth date not null,
   auth_provider_id text unique,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -65,6 +84,7 @@ create table role_assignments (
   club_id uuid references clubs(id),
   user_id uuid not null references users(id),
   role text not null,
+  validation_metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   unique (club_id, user_id, role)
 );
@@ -109,6 +129,8 @@ create table waivers (
   name text not null,
   version text not null,
   body text not null,
+  default_coverage_scope text not null default 'family',
+  responsibility_statement text,
   status text not null default 'active',
   created_at timestamptz not null default now(),
   unique (club_id, name, version)
@@ -118,12 +140,19 @@ create table waiver_signatures (
   id uuid primary key,
   club_id uuid not null references clubs(id),
   waiver_id uuid not null references waivers(id),
-  subject_user_id uuid not null references users(id),
+  subject_user_id uuid references users(id),
+  covered_family_id uuid references families(id),
+  coverage_scope text not null default 'individual',
   signed_by_user_id uuid not null references users(id),
   status text not null default 'signed',
   signed_at timestamptz not null default now(),
   signature_metadata jsonb not null default '{}'::jsonb,
-  unique (club_id, waiver_id, subject_user_id)
+  check (
+    (subject_user_id is not null and covered_family_id is null)
+    or (subject_user_id is null and covered_family_id is not null)
+  ),
+  unique (club_id, waiver_id, subject_user_id),
+  unique (club_id, waiver_id, covered_family_id)
 );
 
 create table membership_plans (
@@ -134,6 +163,9 @@ create table membership_plans (
   price_cents integer not null default 0,
   currency text not null default 'usd',
   eligibility_rules jsonb not null default '{}'::jsonb,
+  pricing_rules jsonb not null default '{}'::jsonb,
+  self_service_opt_in boolean not null default true,
+  admin_required_for_opt_out boolean not null default true,
   privileges jsonb not null default '{}'::jsonb,
   status text not null default 'active',
   created_at timestamptz not null default now(),
@@ -153,6 +185,28 @@ create table memberships (
   stripe_subscription_id text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+create table membership_participants (
+  id uuid primary key,
+  club_id uuid not null references clubs(id),
+  membership_id uuid not null references memberships(id),
+  user_id uuid not null references users(id),
+  family_member_id uuid references family_members(id),
+  participation_status text not null default 'active',
+  pricing_role text not null default 'active_member',
+  price_cents integer not null default 0,
+  privileges jsonb not null default '{}'::jsonb,
+  review_status text not null default 'pending_admin_review',
+  selected_by_user_id uuid references users(id),
+  approved_by_user_id uuid references users(id),
+  approved_at timestamptz,
+  locked_at timestamptz,
+  starts_at timestamptz not null,
+  ends_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (club_id, membership_id, user_id)
 );
 
 create table billing_customers (
@@ -211,7 +265,7 @@ create table sessions (
   program_id uuid references programs(id),
   coach_id uuid references coaches(id),
   facility_id uuid references facilities(id),
-  court_id uuid references courts(id),
+  bookable_resource_id uuid references bookable_resources(id),
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   capacity integer,
@@ -337,11 +391,14 @@ create table message_recipients (
 );
 
 create index facilities_club_id_idx on facilities(club_id);
-create index courts_club_id_idx on courts(club_id);
+create index club_activities_club_id_idx on club_activities(club_id);
+create index bookable_resources_club_id_idx on bookable_resources(club_id);
 create index club_users_club_id_idx on club_users(club_id);
 create index club_users_user_id_idx on club_users(user_id);
 create index family_members_club_family_idx on family_members(club_id, family_id);
 create index memberships_club_owner_idx on memberships(club_id, owner_type, owner_id);
+create index membership_participants_membership_idx on membership_participants(club_id, membership_id);
+create index membership_participants_user_idx on membership_participants(club_id, user_id, participation_status);
 create index billing_customers_club_owner_idx on billing_customers(club_id, owner_type, owner_id);
 create index sessions_club_time_idx on sessions(club_id, starts_at, ends_at);
 create index program_registrations_club_program_idx on program_registrations(club_id, program_id);
