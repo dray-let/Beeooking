@@ -7,6 +7,7 @@ This repository contains the Beeooking layered product strategy and implementati
 - `/dashboard` or `/`: Layer 1 clickable operations prototype and planning dashboard.
 - `/login`: Dedicated login page with email sign-in and demo role shortcuts.
 - `/app`: Real Layer 1 app foundation for demo auth, club setup, members/families, waiver signing, and waiver-gated booking checks.
+- `/api/layers`: Layered product strategy artifact list.
 - `/api/app/session`: Current demo session and app state.
 
 ## Layer 1 Foundation Status

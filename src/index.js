@@ -1,5 +1,14 @@
 import { handleAppApi, renderAppShell, renderLoginPage } from "./app.js";
 
+const artifacts = [
+  ["Layer 1", "Club Operating System", "User management, memberships, bookings, payments, communications, and multi-club architecture."],
+  ["Layer 2", "Player Development Platform", "Coach feedback, session notes, goals, skill assessments, report cards, and progress dashboards."],
+  ["Layer 3", "Competition Platform", "Ladders, challenges, round robins, leagues, tournament registration, and match history."],
+  ["Layer 4", "AI Platform", "AI Coach, AI Club Manager, AI Player Development, recommendations, insights, and outcomes."],
+  ["Layer 5", "Ecosystem & Scale Platform", "Integrations, partner APIs, analytics, benchmarking, organizations, exports, and governance."],
+  ["Layer 6", "Commercialization & Growth Platform", "Packaging, entitlements, sales pipeline, onboarding, customer success, support, feedback, and growth analytics."]
+];
+
 const layerOne = {
   name: "Layer 1: Club Operating System",
   objective:
@@ -2413,6 +2422,14 @@ export default {
 
     if (url.pathname.startsWith("/api/app") || url.pathname.startsWith("/api/auth") || url.pathname.startsWith("/api/clubs")) {
       return handleAppApi(request, env);
+    }
+
+    if (url.pathname === "/api/layers") {
+      return new Response(JSON.stringify({ artifacts }, null, 2), {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      });
     }
 
     if (url.pathname === "/api/layer-1") {
