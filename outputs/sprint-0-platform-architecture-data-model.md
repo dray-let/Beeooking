@@ -4,6 +4,21 @@
 
 Sprint 0 defines the technical foundation for Beeooking before product features are built. The goal is to prevent rework by establishing multi-tenancy, core objects, permission boundaries, and data relationships up front.
 
+## Engineering Contract
+
+The build contract for Sprint 0 lives in `outputs/layer-0-engineering-contract.md`.
+
+That contract is the implementation source of truth for:
+
+- Permission keys and denial cases.
+- Booking rule decision order and error codes.
+- Membership pricing examples and locking behavior.
+- Waiver completion checks.
+- Row-level security expectations.
+- Audit events.
+- API request/response payloads.
+- Acceptance test cases.
+
 ## Architecture Principles
 
 - Every operational record is scoped to a `club_id`.

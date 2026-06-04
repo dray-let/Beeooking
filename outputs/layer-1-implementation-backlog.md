@@ -20,6 +20,7 @@ Stories:
 - Define waiver enforcement rules and activity blocks when waiver is incomplete.
 - Define audit logging requirements for privileged actions and overrides.
 - Define Sprint 0 API contract for setup, families, waivers, memberships, bookings, roles, and credits.
+- Create Layer 0 engineering contract with permission keys, decision orders, API payloads, error codes, RLS expectations, audit events, and test cases.
 - Define Stripe object mapping for customers, subscriptions, payments, invoices, and refunds.
 - Create seed data for one sample club.
 
@@ -44,6 +45,8 @@ Acceptance criteria:
 - Waivers block bookings, waitlists, registrations, check-ins, and walk-ins until complete.
 - Audit logs are required for Club Admin grants, pricing/payment changes, credits, overrides, on-behalf bookings, and impersonation.
 - API contracts exist before Sprint 1 implementation begins.
+- API contracts include request examples, response shape, and error codes for required Layer 1 foundation flows.
+- Test contract covers permissions, booking, membership, waiver, and tenant isolation behavior.
 - Sample seed data exists for one demo club with sports, resources, roles, family, waiver, and membership plans.
 - Initial schema can support Sprint 1 without structural rework.
 

@@ -108,6 +108,7 @@ const layerOne = {
     ["Waiver enforcement", "Locked", "One family waiver can cover all listed members, and incomplete waivers block bookings, registrations, waitlists, check-ins, and walk-ins."],
     ["Database guardrails", "Ready", "Schema includes club scoping, booking time checks, role indexes, waiver indexes, credit adjustments, and audit logs."],
     ["API contracts", "Ready", "Setup, invites, roles, families, dependents, waivers, memberships, booking, and credit routes are specified."],
+    ["Engineering contract", "Ready", "Layer 0 now includes decision orders, API payload examples, error codes, RLS expectations, audit events, and acceptance tests."],
     ["Seed data", "Ready", "Demo club includes sports, resources, users, roles, family, waiver, and membership plan examples."]
   ],
   layerOneRules: [
@@ -1320,7 +1321,7 @@ function renderPage() {
         <section aria-labelledby="layer-zero-title">
           <div class="section-heading">
             <h2 id="layer-zero-title">Sprint 0 Foundation Complete</h2>
-            <p>Layer 0 now defines the architecture, permissions, booking rules, pricing behavior, waiver enforcement, database guardrails, API contracts, and seed data.</p>
+            <p>Layer 0 now defines the architecture, permissions, booking rules, pricing behavior, waiver enforcement, database guardrails, API contracts, engineering contract, and seed data.</p>
           </div>
           <div class="table-wrap">
             <table>

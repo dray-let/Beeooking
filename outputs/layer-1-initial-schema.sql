@@ -1,5 +1,8 @@
 -- Beeooking Layer 1 initial schema draft.
 -- Intended for Postgres/Supabase-style relational implementation.
+-- Engineering contract: outputs/layer-0-engineering-contract.md.
+-- Service layer must enforce the contract where a rule cannot safely be
+-- expressed as a portable relational constraint.
 
 create table clubs (
   id uuid primary key,
@@ -89,6 +92,11 @@ create table role_assignments (
   created_at timestamptz not null default now(),
   unique (club_id, user_id, role)
 );
+
+-- Contract note:
+-- Super Admin is represented by a role_assignment with null club_id.
+-- Staff-side roles must validate organization email domain before activation.
+-- Only Super Admin may grant club_admin or edit core pricing/payment structure.
 
 create table families (
   id uuid primary key,
@@ -213,6 +221,10 @@ create table membership_participants (
   unique (club_id, membership_id, user_id)
 );
 
+-- Contract note:
+-- Service layer must enforce one main member, max one spousal member,
+-- under-18 dependent participants, and post-approval locking.
+
 create table billing_customers (
   id uuid primary key,
   club_id uuid not null references clubs(id),
@@ -319,6 +331,12 @@ create table bookings (
   check (ends_at > starts_at)
 );
 
+-- Contract note:
+-- Service layer must enforce waiver completion, membership access, role booking
+-- horizon, peak booking limits, resource conflicts, coach conflicts, participant
+-- conflicts, payment requirements, and on-behalf audit logging before a booking
+-- becomes confirmed.
+
 create table waitlist_entries (
   id uuid primary key,
   club_id uuid not null references clubs(id),
@@ -422,6 +440,11 @@ create table audit_logs (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
+
+-- Contract note:
+-- Audit actions are defined in outputs/layer-0-engineering-contract.md and must
+-- cover Club Admin grants, pricing/payment changes, credits, overrides,
+-- on-behalf bookings, post-lock membership changes, and impersonation.
 
 create index facilities_club_id_idx on facilities(club_id);
 create index club_activities_club_id_idx on club_activities(club_id);
