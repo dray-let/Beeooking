@@ -64,7 +64,10 @@ const layerOne = {
     ["Badminton", "court", false, 0],
     ["Swimming", "lane", false, 0],
     ["Fitness", "studio", true, 2],
-    ["Ice hockey", "rink", false, 0],
+    ["Ice hockey / skating", "rink", false, 0],
+    ["Basketball", "court", false, 0],
+    ["Volleyball", "court", false, 0],
+    ["Indoor turf", "field", false, 0],
     ["Multi-purpose", "room", false, 0]
   ],
   activitySetupRules: [
@@ -344,15 +347,20 @@ function renderOrganizationEmailRows() {
 function renderActivityMenuOptions() {
   return layerOne.activityOptions
     .map(
-      ([activity, unit, selected]) => `
+      ([activity, unit, selected, count]) => `
         <label class="activity-option">
-          <input type="checkbox" ${selected ? "checked" : ""} data-activity-option="${activity}" data-resource-unit="${unit}">
+          <input type="checkbox" ${selected ? "checked" : ""} data-activity-option="${activity}" data-resource-unit="${unit}" data-resource-count="${count}">
           <span>${activity}</span>
           <small>${unit}s</small>
         </label>
       `
     )
     .join("");
+}
+
+function renderSelectedActivitySummary() {
+  const selectedActivities = layerOne.activityOptions.filter(([, , selected]) => selected);
+  return `${selectedActivities.length} selected: ${selectedActivities.map(([activity]) => activity).join(", ")}`;
 }
 
 function renderResourceCountRows() {
@@ -1041,6 +1049,16 @@ function renderPage() {
           padding: 10px;
         }
 
+        .selected-activities {
+          padding: 10px 16px;
+          border-top: 1px solid var(--line);
+          background: var(--surface);
+          color: var(--muted);
+          font-size: 13px;
+          font-weight: 750;
+          line-height: 1.45;
+        }
+
         .activity-option {
           display: grid;
           grid-template-columns: 22px minmax(0, 1fr) auto;
@@ -1330,14 +1348,19 @@ function renderPage() {
           </div>
           <div class="activity-setup-grid">
             <details class="activity-menu" open>
-              <summary>Activity menu</summary>
+              <summary data-activity-menu-summary>Select sports and facility types</summary>
               <div class="activity-menu-body">${renderActivityMenuOptions()}</div>
+              <div class="selected-activities" data-activity-summary>${renderSelectedActivitySummary()}</div>
             </details>
             <div class="table-wrap">
               <table>
                 <tbody data-resource-counts>${renderResourceCountRows()}</tbody>
               </table>
             </div>
+          </div>
+          <div class="action-row">
+            <button type="button">Save activity setup</button>
+            <button type="button" class="secondary-action">Clear selections</button>
           </div>
           <div class="table-wrap" style="margin-top: 14px;">
             <table>
@@ -1479,11 +1502,25 @@ function renderPage() {
         });
 
         const resourceCounts = document.querySelector("[data-resource-counts]");
-        document.querySelectorAll("[data-activity-option]").forEach((input) => {
+        const activityInputs = document.querySelectorAll("[data-activity-option]");
+        const activitySummary = document.querySelector("[data-activity-summary]");
+        const activityMenuSummary = document.querySelector("[data-activity-menu-summary]");
+
+        function updateActivitySummary() {
+          const selected = Array.from(activityInputs)
+            .filter((input) => input.checked)
+            .map((input) => input.dataset.activityOption);
+          const summaryText = selected.length ? selected.length + " selected: " + selected.join(", ") : "No activities selected";
+          if (activitySummary) activitySummary.textContent = summaryText;
+          if (activityMenuSummary) activityMenuSummary.textContent = selected.length ? "Selected activities (" + selected.length + ")" : "Select sports and facility types";
+        }
+
+        activityInputs.forEach((input) => {
           input.addEventListener("change", () => {
             if (!resourceCounts) return;
             const activity = input.dataset.activityOption;
             const unit = input.dataset.resourceUnit;
+            const count = input.dataset.resourceCount || "1";
             const existingRow = resourceCounts.querySelector("[data-resource-row='" + activity + "']");
 
             if (input.checked && !existingRow) {
@@ -1493,15 +1530,30 @@ function renderPage() {
                 "<th scope='row'>" + activity + "</th>" +
                 "<td><span class='status-chip'>" + unit + "s</span></td>" +
                 "<td><label class='count-input'><span>Number needed</span>" +
-                "<input type='number' min='0' value='1' aria-label='" + activity + " " + unit + " count'></label></td>";
+                "<input type='number' min='0' value='" + count + "' aria-label='" + activity + " " + unit + " count'></label></td>";
               resourceCounts.appendChild(row);
             }
 
             if (!input.checked && existingRow) {
               existingRow.remove();
             }
+
+            updateActivitySummary();
           });
         });
+
+        document.querySelectorAll(".secondary-action").forEach((button) => {
+          if (button.textContent.trim() !== "Clear selections") return;
+          button.addEventListener("click", () => {
+            activityInputs.forEach((input) => {
+              input.checked = false;
+            });
+            if (resourceCounts) resourceCounts.innerHTML = "";
+            updateActivitySummary();
+          });
+        });
+
+        updateActivitySummary();
       </script>
     </body>
   </html>`;
