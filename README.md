@@ -5,6 +5,7 @@ This repository contains the Beeooking layered product strategy and implementati
 ## Current App Surfaces
 
 - `/dashboard` or `/`: Layer 1 clickable operations prototype and planning dashboard.
+- `/login`: Dedicated login page with email sign-in and demo role shortcuts.
 - `/app`: Real Layer 1 app foundation for demo auth, club setup, members/families, waiver signing, and waiver-gated booking checks.
 - `/api/app/session`: Current demo session and app state.
 
@@ -15,6 +16,7 @@ The app foundation now has:
 - Cloudflare Worker app structure.
 - Demo cookie authentication with role switching.
 - Email login that creates a session cookie.
+- Dedicated `/login` page that sends signed-in users to `/app`.
 - Club setup flow.
 - Organization-domain invite validation for Club Admin, Staff, and Coach roles.
 - Members and families API.

@@ -918,6 +918,265 @@ export async function handleAppApi(request, env = {}) {
   return json({ error: { code: "not_found", message: "API route not found." } }, { status: 404 });
 }
 
+export function renderLoginPage() {
+  return `<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>CourtHubs Login</title>
+      <style>
+        :root {
+          --ink: #17212b;
+          --muted: #64717f;
+          --line: #d9e1e8;
+          --surface: #f6f8fa;
+          --accent: #0f766e;
+          --accent-soft: #ddf5f1;
+          --warn: #94590d;
+          --warn-soft: #fff0d6;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+          min-height: 100vh;
+          margin: 0;
+          color: var(--ink);
+          background:
+            linear-gradient(180deg, rgba(246, 248, 250, 0.92), rgba(255, 255, 255, 0.96)),
+            url("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=1800&q=80") center / cover;
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        main {
+          display: grid;
+          min-height: 100vh;
+          grid-template-columns: minmax(0, 1fr) 420px;
+          gap: 36px;
+          align-items: center;
+          width: min(1120px, calc(100% - 28px));
+          margin: 0 auto;
+          padding: 44px 0;
+        }
+
+        h1, h2 { margin: 0; letter-spacing: 0; }
+        h1 { max-width: 680px; font-size: 54px; line-height: 1.02; }
+        h2 { font-size: 24px; }
+        p { color: var(--muted); line-height: 1.5; }
+
+        .brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 18px;
+          color: #075c55;
+          font-weight: 850;
+        }
+
+        .mark {
+          display: grid;
+          width: 38px;
+          height: 38px;
+          place-items: center;
+          border-radius: 8px;
+          background: var(--accent);
+          color: #fff;
+          font-weight: 900;
+        }
+
+        .login-card,
+        .feature {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.94);
+          box-shadow: 0 18px 52px rgba(23, 33, 43, 0.12);
+        }
+
+        .login-card { padding: 22px; }
+
+        form {
+          display: grid;
+          gap: 12px;
+          margin-top: 18px;
+        }
+
+        label {
+          display: grid;
+          gap: 6px;
+          color: var(--muted);
+          font-size: 13px;
+          font-weight: 750;
+        }
+
+        input, button {
+          min-height: 42px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          font: inherit;
+        }
+
+        input {
+          width: 100%;
+          padding: 8px 10px;
+          background: #fff;
+        }
+
+        button {
+          padding: 9px 12px;
+          background: #fff;
+          color: var(--ink);
+          font-weight: 780;
+          cursor: pointer;
+        }
+
+        button.primary {
+          border-color: var(--accent);
+          background: var(--accent);
+          color: #fff;
+        }
+
+        .demo-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+          margin-top: 14px;
+        }
+
+        .notice {
+          margin-top: 14px;
+          padding: 12px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--surface);
+          color: var(--muted);
+        }
+
+        .notice.warn {
+          border-color: #e8bd72;
+          background: var(--warn-soft);
+          color: var(--warn);
+        }
+
+        .feature-list {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+          margin-top: 24px;
+        }
+
+        .feature {
+          min-height: 112px;
+          padding: 14px;
+          box-shadow: none;
+        }
+
+        .feature strong { display: block; margin-bottom: 6px; }
+        .feature span { color: var(--muted); font-size: 14px; line-height: 1.35; }
+
+        @media (max-width: 880px) {
+          main {
+            grid-template-columns: 1fr;
+            align-items: start;
+          }
+
+          h1 { font-size: 38px; }
+          .feature-list { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 520px) {
+          .demo-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <main>
+        <section>
+          <div class="brand"><span class="mark">C</span><span>CourtHubs</span></div>
+          <h1>Run club operations from one secure workspace.</h1>
+          <p>Sign in to manage club setup, members and families, waivers, admin review, and bookable resources for the Layer 1 operating system.</p>
+          <div class="feature-list" aria-label="Layer 1 login features">
+            <article class="feature"><strong>Family records</strong><span>Grouped members, dependents, active status, and emergency contacts.</span></article>
+            <article class="feature"><strong>Waiver gate</strong><span>One family waiver controls booking access before participation.</span></article>
+            <article class="feature"><strong>Admin review</strong><span>Approve membership setup before access rules are locked.</span></article>
+          </div>
+        </section>
+
+        <section class="login-card" aria-label="Sign in">
+          <h2>Sign in</h2>
+          <p>Use an email account or choose a demo role to test permissions.</p>
+          <form data-login-form>
+            <label>Email<input name="email" type="email" value="clubadmin@beeooking.com" autocomplete="email" required></label>
+            <button class="primary" type="submit">Continue to dashboard</button>
+          </form>
+          <div class="demo-grid" data-demo-logins></div>
+          <div class="notice" data-login-result>After sign in, you will be sent to the app dashboard.</div>
+        </section>
+      </main>
+      <script>
+        const demoUsers = ${JSON.stringify(demoUsers)};
+
+        async function api(path, options = {}) {
+          const response = await fetch(path, {
+            ...options,
+            headers: {
+              "Content-Type": "application/json",
+              ...(options.headers || {})
+            }
+          });
+          const body = await response.json();
+          if (!response.ok) throw new Error(body.error?.message || "Request failed");
+          return body.data;
+        }
+
+        function roleLabel(role) {
+          return role.split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
+        }
+
+        function setResult(message, isWarning = false) {
+          const target = document.querySelector("[data-login-result]");
+          target.textContent = message;
+          target.classList.toggle("warn", isWarning);
+        }
+
+        document.querySelector("[data-demo-logins]").innerHTML = demoUsers.map((user) =>
+          "<button type='button' data-demo-user='" + user.id + "'>" + user.name + "<br><small>" + roleLabel(user.role) + "</small></button>"
+        ).join("");
+
+        document.querySelector("[data-login-form]").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const fields = Object.fromEntries(new FormData(event.currentTarget).entries());
+          try {
+            setResult("Signing in...");
+            await api("/api/auth/login", {
+              method: "POST",
+              body: JSON.stringify({ email: fields.email })
+            });
+            window.location.href = "/app";
+          } catch (error) {
+            setResult(error.message, true);
+          }
+        });
+
+        document.querySelectorAll("[data-demo-user]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            try {
+              setResult("Switching demo role...");
+              await api("/api/auth/demo-login", {
+                method: "POST",
+                body: JSON.stringify({ userId: button.dataset.demoUser })
+              });
+              window.location.href = "/app";
+            } catch (error) {
+              setResult(error.message, true);
+            }
+          });
+        });
+      </script>
+    </body>
+  </html>`;
+}
+
 export function renderAppShell() {
   const club = initialState.clubs[0];
   return `<!doctype html>

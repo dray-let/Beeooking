@@ -1,4 +1,4 @@
-import { handleAppApi, renderAppShell } from "./app.js";
+import { handleAppApi, renderAppShell, renderLoginPage } from "./app.js";
 
 const layerOne = {
   name: "Layer 1: Club Operating System",
@@ -2394,6 +2394,14 @@ function renderPage() {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/login") {
+      return new Response(renderLoginPage(), {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8"
+        }
+      });
+    }
 
     if (url.pathname === "/" || url.pathname === "/app" || url.pathname.startsWith("/app/")) {
       return new Response(renderAppShell(), {
