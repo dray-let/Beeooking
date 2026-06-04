@@ -952,18 +952,27 @@ export function renderLoginPage() {
         main {
           display: grid;
           min-height: 100vh;
-          grid-template-columns: minmax(0, 1fr) 420px;
-          gap: 36px;
-          align-items: center;
+          grid-template-columns: minmax(360px, 520px) minmax(280px, 1fr);
+          gap: 28px;
+          align-items: start;
           width: min(1120px, calc(100% - 28px));
           margin: 0 auto;
-          padding: 44px 0;
+          padding: 34px 0;
         }
 
         h1, h2 { margin: 0; letter-spacing: 0; }
-        h1 { max-width: 680px; font-size: 54px; line-height: 1.02; }
+        h1 { font-size: 30px; line-height: 1.12; }
         h2 { font-size: 24px; }
         p { color: var(--muted); line-height: 1.5; }
+
+        .sidebar {
+          position: sticky;
+          top: 24px;
+          padding: 18px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.9);
+        }
 
         .brand {
           display: inline-flex;
@@ -993,7 +1002,7 @@ export function renderLoginPage() {
           box-shadow: 0 18px 52px rgba(23, 33, 43, 0.12);
         }
 
-        .login-card { padding: 22px; }
+        .login-card { padding: 24px; }
 
         form {
           display: grid;
@@ -1060,9 +1069,9 @@ export function renderLoginPage() {
 
         .feature-list {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: 1fr;
           gap: 10px;
-          margin-top: 24px;
+          margin-top: 18px;
         }
 
         .feature {
@@ -1080,8 +1089,9 @@ export function renderLoginPage() {
             align-items: start;
           }
 
-          h1 { font-size: 38px; }
-          .feature-list { grid-template-columns: 1fr; }
+          .sidebar {
+            position: static;
+          }
         }
 
         @media (max-width: 520px) {
@@ -1091,17 +1101,6 @@ export function renderLoginPage() {
     </head>
     <body>
       <main>
-        <section>
-          <div class="brand"><span class="mark">C</span><span>CourtHubs</span></div>
-          <h1>Run club operations from one secure workspace.</h1>
-          <p>Sign in to manage club setup, members and families, waivers, admin review, and bookable resources for the Layer 1 operating system.</p>
-          <div class="feature-list" aria-label="Layer 1 login features">
-            <article class="feature"><strong>Family records</strong><span>Grouped members, dependents, active status, and emergency contacts.</span></article>
-            <article class="feature"><strong>Waiver gate</strong><span>One family waiver controls booking access before participation.</span></article>
-            <article class="feature"><strong>Admin review</strong><span>Approve membership setup before access rules are locked.</span></article>
-          </div>
-        </section>
-
         <section class="login-card" aria-label="Sign in">
           <h2>Sign in</h2>
           <p>Use an email account or choose a demo role to test permissions.</p>
@@ -1112,6 +1111,17 @@ export function renderLoginPage() {
           <div class="demo-grid" data-demo-logins></div>
           <div class="notice" data-login-result>After sign in, you will be sent to the app dashboard.</div>
         </section>
+
+        <aside class="sidebar" aria-label="CourtHubs overview">
+          <div class="brand"><span class="mark">C</span><span>CourtHubs</span></div>
+          <h1>Run club operations from one secure workspace.</h1>
+          <p>Sign in to manage club setup, members and families, waivers, admin review, and bookable resources for the Layer 1 operating system.</p>
+          <div class="feature-list" aria-label="Layer 1 login features">
+            <article class="feature"><strong>Family records</strong><span>Grouped members, dependents, active status, and emergency contacts.</span></article>
+            <article class="feature"><strong>Waiver gate</strong><span>One family waiver controls booking access before participation.</span></article>
+            <article class="feature"><strong>Admin review</strong><span>Approve membership setup before access rules are locked.</span></article>
+          </div>
+        </aside>
       </main>
       <script>
         const demoUsers = ${JSON.stringify(demoUsers)};
