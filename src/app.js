@@ -57,6 +57,18 @@ const initialState = {
       ]
     }
   ],
+  emergencyContacts: [
+    {
+      id: "emergency_contact_demo",
+      clubId: "club_demo",
+      userId: "user_child",
+      name: "Demo Parent",
+      relationship: "Parent",
+      phone: "555-0100",
+      email: "parent@example.com",
+      isPrimary: true
+    }
+  ],
   waivers: [
     {
       id: "waiver_family_v1",
@@ -72,33 +84,343 @@ const initialState = {
 };
 
 let memoryState = structuredClone(initialState);
+const memorySessions = new Map();
+
+function hasD1(env) {
+  return Boolean(env?.DB);
+}
+
+function newId(prefix) {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function userNameParts(user) {
+  const parts = user.name.split(" ");
+  return {
+    firstName: parts[0] || "Demo",
+    lastName: parts.slice(1).join(" ") || "User"
+  };
+}
+
+function mapClub(row, activities) {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    timezone: row.timezone,
+    organizationEmailDomain: row.organization_email_domain || "",
+    setupStatus: row.setup_status,
+    activities
+  };
+}
+
+function mapFamily(row, members) {
+  return {
+    id: row.id,
+    clubId: row.club_id,
+    name: row.name,
+    primaryContactUserId: row.primary_contact_user_id,
+    billingOwnerUserId: row.billing_owner_user_id,
+    reviewStatus: row.review_status,
+    paymentStatus: row.payment_status,
+    members
+  };
+}
+
+function mapFamilyMember(row) {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    dateOfBirth: row.date_of_birth,
+    relationship: row.relationship,
+    participationStatus: row.participation_status,
+    isGuardian: Boolean(row.is_guardian)
+  };
+}
+
+function mapEmergencyContact(row) {
+  return {
+    id: row.id,
+    clubId: row.club_id,
+    userId: row.user_id,
+    name: row.name,
+    relationship: row.relationship || "",
+    phone: row.phone,
+    email: row.email || "",
+    isPrimary: Boolean(row.is_primary)
+  };
+}
+
+function mapWaiver(row) {
+  return {
+    id: row.id,
+    clubId: row.club_id,
+    name: row.name,
+    version: row.version,
+    defaultCoverageScope: row.default_coverage_scope,
+    responsibilityStatement: row.responsibility_statement,
+    status: row.status
+  };
+}
+
+function mapSignature(row) {
+  return {
+    id: row.id,
+    clubId: row.club_id,
+    waiverId: row.waiver_id,
+    subjectUserId: row.subject_user_id,
+    coveredFamilyId: row.covered_family_id,
+    coverageScope: row.coverage_scope,
+    signedByUserId: row.signed_by_user_id,
+    status: row.status,
+    signedAt: row.signed_at
+  };
+}
+
+function mapUserSession(row) {
+  return {
+    id: row.id,
+    name: `${row.first_name} ${row.last_name}`,
+    email: row.email,
+    role: row.role || "member"
+  };
+}
+
+async function all(db, sql, ...bindings) {
+  const result = await db.prepare(sql).bind(...bindings).all();
+  return result.results || [];
+}
+
+async function first(db, sql, ...bindings) {
+  return db.prepare(sql).bind(...bindings).first();
+}
 
 async function loadState(env) {
-  if (!env?.DB) return;
+  if (!hasD1(env)) return;
   try {
-    const row = await env.DB.prepare("select value from app_state where key = ?").bind("layer1").first();
-    if (row?.value) {
-      memoryState = JSON.parse(row.value);
-      return;
-    }
-    await persistState(env);
+    await seedD1IfEmpty(env.DB);
+    memoryState = await readD1State(env.DB);
   } catch {
     // D1 binding can exist before migrations are applied; keep the app usable.
   }
 }
 
 async function persistState(env) {
-  if (!env?.DB) return;
+  if (!hasD1(env)) return;
   try {
-    await env.DB
-      .prepare(
-        "insert into app_state (key, value, updated_at) values (?, ?, current_timestamp) " +
-        "on conflict(key) do update set value = excluded.value, updated_at = current_timestamp"
-      )
-      .bind("layer1", JSON.stringify(memoryState))
-      .run();
+    await writeD1State(env.DB, memoryState);
   } catch {
     // See loadState note: missing migrations should not break the preview.
+  }
+}
+
+async function seedD1IfEmpty(db) {
+  const existing = await first(db, "select id from clubs limit 1");
+  if (existing) return;
+  await writeD1State(db, structuredClone(initialState));
+}
+
+async function readD1State(db) {
+  const clubRows = await all(db, "select * from clubs order by created_at, name");
+  const activityRows = await all(db, "select * from club_activities order by created_at, activity_type");
+  const familyRows = await all(db, "select * from families order by created_at, name");
+  const familyMemberRows = await all(db, "select * from family_members order by created_at, relationship");
+  const emergencyContactRows = await all(db, "select * from emergency_contacts order by created_at, name");
+  const waiverRows = await all(db, "select * from waivers order by created_at, name");
+  const signatureRows = await all(db, "select * from waiver_signatures order by signed_at");
+
+  return {
+    clubs: clubRows.map((club) =>
+      mapClub(
+        club,
+        activityRows
+          .filter((activity) => activity.club_id === club.id)
+          .map((activity) => ({
+            activityType: activity.activity_type,
+            resourceUnit: activity.resource_unit,
+            resourceCount: activity.resource_count
+          }))
+      )
+    ),
+    families: familyRows.map((family) =>
+      mapFamily(
+        family,
+        familyMemberRows.filter((member) => member.family_id === family.id).map(mapFamilyMember)
+      )
+    ),
+    emergencyContacts: emergencyContactRows.map(mapEmergencyContact),
+    waivers: waiverRows.map(mapWaiver),
+    waiverSignatures: signatureRows.map(mapSignature)
+  };
+}
+
+async function writeD1State(db, state) {
+  for (const user of demoUsers) {
+    const { firstName, lastName } = userNameParts(user);
+    await db
+      .prepare(
+        "insert into users (id, email, first_name, last_name, date_of_birth, updated_at) values (?, ?, ?, ?, ?, current_timestamp) " +
+        "on conflict(id) do update set email = excluded.email, first_name = excluded.first_name, last_name = excluded.last_name, updated_at = current_timestamp"
+      )
+      .bind(user.id, user.email, firstName, lastName, user.id === "user_member" ? "1995-01-01" : "1985-01-01")
+      .run();
+    await db
+      .prepare(
+        "insert into role_assignments (id, club_id, user_id, role, permissions, validation_metadata) values (?, ?, ?, ?, ?, ?) " +
+          "on conflict(club_id, user_id, role) do update set permissions = excluded.permissions, validation_metadata = excluded.validation_metadata"
+      )
+      .bind(
+        `role_${user.id}_${user.role}`,
+        user.role === "super_admin" ? null : "club_demo",
+        user.id,
+        user.role,
+        JSON.stringify({ demo: true }),
+        JSON.stringify({ seeded: true })
+      )
+      .run();
+  }
+
+  for (const club of state.clubs) {
+    await db
+      .prepare(
+        "insert into clubs (id, name, slug, timezone, organization_email_domain, setup_status, updated_at) values (?, ?, ?, ?, ?, ?, current_timestamp) " +
+        "on conflict(id) do update set name = excluded.name, slug = excluded.slug, timezone = excluded.timezone, organization_email_domain = excluded.organization_email_domain, setup_status = excluded.setup_status, updated_at = current_timestamp"
+      )
+      .bind(club.id, club.name, club.slug, club.timezone, club.organizationEmailDomain, club.setupStatus)
+      .run();
+
+    await db.prepare("delete from club_activities where club_id = ?").bind(club.id).run();
+    for (const activity of club.activities) {
+      await db
+        .prepare(
+          "insert into club_activities (id, club_id, activity_type, resource_unit, resource_count, updated_at) values (?, ?, ?, ?, ?, current_timestamp)"
+        )
+        .bind(
+          `activity_${club.id}_${activity.activityType}`,
+          club.id,
+          activity.activityType,
+          activity.resourceUnit,
+          Number(activity.resourceCount || 0)
+        )
+        .run();
+    }
+  }
+
+  for (const family of state.families) {
+    for (const member of family.members) {
+      await db
+        .prepare(
+          "insert into users (id, email, first_name, last_name, date_of_birth, updated_at) values (?, ?, ?, ?, ?, current_timestamp) " +
+          "on conflict(id) do update set first_name = excluded.first_name, last_name = excluded.last_name, date_of_birth = excluded.date_of_birth, updated_at = current_timestamp"
+        )
+        .bind(
+          member.userId,
+          `${member.userId}@example.local`,
+          member.firstName,
+          member.lastName,
+          member.dateOfBirth
+        )
+        .run();
+    }
+
+    await db
+      .prepare(
+        "insert into families (id, club_id, name, primary_contact_user_id, billing_owner_user_id, review_status, payment_status, updated_at) values (?, ?, ?, ?, ?, ?, ?, current_timestamp) " +
+        "on conflict(id) do update set name = excluded.name, primary_contact_user_id = excluded.primary_contact_user_id, billing_owner_user_id = excluded.billing_owner_user_id, review_status = excluded.review_status, payment_status = excluded.payment_status, updated_at = current_timestamp"
+      )
+      .bind(
+        family.id,
+        family.clubId,
+        family.name,
+        family.primaryContactUserId,
+        family.billingOwnerUserId,
+        family.reviewStatus,
+        family.paymentStatus
+      )
+      .run();
+
+    await db.prepare("delete from family_members where family_id = ?").bind(family.id).run();
+    for (const member of family.members) {
+      await db
+        .prepare(
+          "insert into family_members (id, club_id, family_id, user_id, first_name, last_name, date_of_birth, relationship, participation_status, is_guardian, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp)"
+        )
+        .bind(
+          member.id,
+          family.clubId,
+          family.id,
+          member.userId,
+          member.firstName,
+          member.lastName,
+          member.dateOfBirth,
+          member.relationship,
+          member.participationStatus,
+          member.isGuardian ? 1 : 0
+        )
+        .run();
+    }
+  }
+
+  for (const club of state.clubs) {
+    await db.prepare("delete from emergency_contacts where club_id = ?").bind(club.id).run();
+  }
+  for (const contact of state.emergencyContacts || []) {
+    await db
+      .prepare(
+        "insert into emergency_contacts (id, club_id, user_id, name, relationship, phone, email, is_primary) values (?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .bind(
+        contact.id,
+        contact.clubId,
+        contact.userId,
+        contact.name,
+        contact.relationship || null,
+        contact.phone,
+        contact.email || null,
+        contact.isPrimary ? 1 : 0
+      )
+      .run();
+  }
+
+  for (const waiver of state.waivers) {
+    await db
+      .prepare(
+        "insert into waivers (id, club_id, name, version, body, default_coverage_scope, responsibility_statement, status) values (?, ?, ?, ?, ?, ?, ?, ?) " +
+        "on conflict(id) do update set name = excluded.name, version = excluded.version, default_coverage_scope = excluded.default_coverage_scope, responsibility_statement = excluded.responsibility_statement, status = excluded.status"
+      )
+      .bind(
+        waiver.id,
+        waiver.clubId,
+        waiver.name,
+        waiver.version,
+        waiver.responsibilityStatement || waiver.name,
+        waiver.defaultCoverageScope,
+        waiver.responsibilityStatement,
+        waiver.status
+      )
+      .run();
+  }
+
+  for (const signature of state.waiverSignatures) {
+    await db
+      .prepare(
+        "insert into waiver_signatures (id, club_id, waiver_id, subject_user_id, covered_family_id, coverage_scope, signed_by_user_id, status, signed_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        "on conflict(id) do update set status = excluded.status, signed_at = excluded.signed_at"
+      )
+      .bind(
+        signature.id,
+        signature.clubId,
+        signature.waiverId,
+        signature.subjectUserId || null,
+        signature.coveredFamilyId || null,
+        signature.coverageScope,
+        signature.signedByUserId,
+        signature.status,
+        signature.signedAt
+      )
+      .run();
   }
 }
 
@@ -118,9 +440,115 @@ function readCookie(request, name) {
   return part ? decodeURIComponent(part.slice(name.length + 1)) : "";
 }
 
-function currentUser(request) {
+async function currentUser(request, env) {
+  const sessionId = readCookie(request, "beeooking_session");
+  if (sessionId && memorySessions.has(sessionId)) {
+    return memorySessions.get(sessionId);
+  }
+  if (sessionId && hasD1(env)) {
+    try {
+      const row = await first(
+        env.DB,
+        "select u.id, u.email, u.first_name, u.last_name, coalesce(ra.role, 'member') as role " +
+          "from user_sessions s " +
+          "join users u on u.id = s.user_id " +
+          "left join role_assignments ra on ra.user_id = u.id and (ra.club_id = ? or ra.club_id is null) " +
+          "where s.id = ? and s.expires_at > current_timestamp " +
+          "order by case ra.role when 'super_admin' then 1 when 'club_admin' then 2 when 'staff' then 3 when 'coach' then 4 when 'parent' then 5 else 6 end " +
+          "limit 1",
+        "club_demo",
+        sessionId
+      );
+      if (row) return mapUserSession(row);
+    } catch {
+      // Fall through to demo cookie fallback.
+    }
+  }
   const id = readCookie(request, "beeooking_user") || "user_super";
   return demoUsers.find((user) => user.id === id) || demoUsers[0];
+}
+
+async function createSession(user, env) {
+  const sessionId = newId("session");
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString();
+  memorySessions.set(sessionId, user);
+  if (hasD1(env)) {
+    try {
+      await env.DB
+        .prepare("insert into user_sessions (id, user_id, expires_at) values (?, ?, ?)")
+        .bind(sessionId, user.id, expiresAt)
+        .run();
+    } catch {
+      // Missing migrations should not block local/fallback auth.
+    }
+  }
+  return {
+    sessionId,
+    cookie: `beeooking_session=${encodeURIComponent(sessionId)}; Path=/; SameSite=Lax; Max-Age=2592000`
+  };
+}
+
+async function findOrCreateLoginUser(email, env) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const demoUser = demoUsers.find((user) => user.email.toLowerCase() === normalizedEmail);
+  if (demoUser) return demoUser;
+  if (hasD1(env)) {
+    const existing = await first(env.DB, "select id, email, first_name, last_name from users where lower(email) = ? limit 1", normalizedEmail);
+    if (existing) {
+      return {
+        id: existing.id,
+        name: `${existing.first_name} ${existing.last_name}`,
+        email: existing.email,
+        role: "member"
+      };
+    }
+    const user = {
+      id: newId("user"),
+      name: normalizedEmail.split("@")[0] || "New Member",
+      email: normalizedEmail,
+      role: "member"
+    };
+    const { firstName, lastName } = userNameParts(user);
+    await env.DB
+      .prepare("insert into users (id, email, first_name, last_name, date_of_birth) values (?, ?, ?, ?, ?)")
+      .bind(user.id, user.email, firstName, lastName, "1990-01-01")
+      .run();
+    await env.DB
+      .prepare("insert into role_assignments (id, club_id, user_id, role, validation_metadata) values (?, ?, ?, ?, ?)")
+      .bind(newId("role"), "club_demo", user.id, "member", JSON.stringify({ source: "email_login" }))
+      .run();
+    return user;
+  }
+  return {
+    id: newId("user"),
+    name: normalizedEmail.split("@")[0] || "New Member",
+    email: normalizedEmail,
+    role: "member"
+  };
+}
+
+async function createInvitedUser(email, role, env) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const demoUser = demoUsers.find((user) => user.email.toLowerCase() === normalizedEmail);
+  if (demoUser) return { ...demoUser, role };
+  const user = {
+    id: newId("user"),
+    name: normalizedEmail.split("@")[0] || "Invited User",
+    email: normalizedEmail,
+    role
+  };
+  if (hasD1(env)) {
+    const existing = await first(env.DB, "select id, email, first_name, last_name from users where lower(email) = ? limit 1", normalizedEmail);
+    if (existing) {
+      return { id: existing.id, name: `${existing.first_name} ${existing.last_name}`, email: existing.email, role };
+    }
+    const { firstName, lastName } = userNameParts(user);
+    await env.DB
+      .prepare("insert into users (id, email, first_name, last_name, date_of_birth) values (?, ?, ?, ?, ?)")
+      .bind(user.id, user.email, firstName, lastName, "1990-01-01")
+      .run();
+  }
+  return user;
 }
 
 function parseBody(request) {
@@ -139,6 +567,19 @@ function isAdult(dateOfBirth) {
 
 function canManageClubSetup(user) {
   return user.role === "super_admin";
+}
+
+function canInviteRole(user, role) {
+  if (role === "club_admin") return user.role === "super_admin";
+  return ["super_admin", "club_admin"].includes(user.role);
+}
+
+function roleRequiresOrgEmail(role) {
+  return ["super_admin", "club_admin", "staff", "coach"].includes(role);
+}
+
+function emailMatchesDomain(email, domain) {
+  return Boolean(email && domain && email.toLowerCase().endsWith(`@${domain.toLowerCase()}`));
 }
 
 function canManageFamilies(user) {
@@ -189,10 +630,15 @@ function bookingGateForFamily(family) {
 }
 
 function withDerivedState() {
+  const emergencyContacts = memoryState.emergencyContacts || [];
   return {
     ...memoryState,
     families: memoryState.families.map((family) => ({
       ...family,
+      members: family.members.map((member) => ({
+        ...member,
+        emergencyContacts: emergencyContacts.filter((contact) => contact.userId === member.userId)
+      })),
       waiverStatus: familyWaiverStatus(family),
       bookingGate: bookingGateForFamily(family)
     }))
@@ -207,7 +653,7 @@ export async function handleAppApi(request, env = {}) {
   await loadState(env);
   const url = new URL(request.url);
   const parts = routeParts(url.pathname);
-  const user = currentUser(request);
+  const user = await currentUser(request, env);
 
   async function saved(data, init) {
     await persistState(env);
@@ -221,11 +667,29 @@ export async function handleAppApi(request, env = {}) {
   if (url.pathname === "/api/auth/demo-login" && request.method === "POST") {
     const body = await parseBody(request);
     const selected = demoUsers.find((item) => item.id === body.userId) || demoUsers[0];
+    const session = await createSession(selected, env);
     return json(
       { data: { user: selected } },
       {
         headers: {
-          "Set-Cookie": `beeooking_user=${encodeURIComponent(selected.id)}; Path=/; SameSite=Lax; Max-Age=2592000`
+          "Set-Cookie": session.cookie
+        }
+      }
+    );
+  }
+
+  if (url.pathname === "/api/auth/login" && request.method === "POST") {
+    const body = await parseBody(request);
+    if (!body.email) {
+      return json({ error: { code: "email_required", message: "Email is required." } }, { status: 400 });
+    }
+    const selected = await findOrCreateLoginUser(body.email, env);
+    const session = await createSession(selected, env);
+    return json(
+      { data: { user: selected } },
+      {
+        headers: {
+          "Set-Cookie": session.cookie
         }
       }
     );
@@ -266,6 +730,48 @@ export async function handleAppApi(request, env = {}) {
     club.activities = Array.isArray(body.activities) ? body.activities : club.activities;
     club.setupStatus = body.setupStatus || "ready_for_admin";
     return saved({ data: club });
+  }
+
+  if (parts[0] === "api" && parts[1] === "clubs" && parts[3] === "invites" && request.method === "POST") {
+    const club = memoryState.clubs.find((item) => item.id === parts[2]);
+    if (!club) return json({ error: { code: "not_found", message: "Club not found." } }, { status: 404 });
+    const body = await parseBody(request);
+    const role = body.role || "member";
+    if (!canInviteRole(user, role)) {
+      return json({ error: { code: "permission_denied", message: "You cannot invite this role." } }, { status: 403 });
+    }
+    if (roleRequiresOrgEmail(role) && !emailMatchesDomain(body.email, club.organizationEmailDomain)) {
+      return json(
+        {
+          error: {
+            code: "organization_email_required",
+            message: `The ${role} role requires an email ending in @${club.organizationEmailDomain}.`
+          }
+        },
+        { status: 409 }
+      );
+    }
+    const invitedUser = await createInvitedUser(body.email, role, env);
+    if (hasD1(env)) {
+      await env.DB
+        .prepare("insert into role_assignments (id, club_id, user_id, role, validation_metadata) values (?, ?, ?, ?, ?)")
+        .bind(
+          newId("role"),
+          role === "super_admin" ? null : club.id,
+          invitedUser.id,
+          role,
+          JSON.stringify({ invitedBy: user.id, domain: club.organizationEmailDomain, passed: true })
+        )
+        .run();
+    }
+    return json({
+      data: {
+        user: invitedUser,
+        role,
+        status: "invited",
+        message: `${invitedUser.email} can now sign in as ${role.replace("_", " ")}.`
+      }
+    }, { status: 201 });
   }
 
   if (parts.length === 4 && parts[0] === "api" && parts[1] === "clubs" && parts[3] === "families" && request.method === "GET") {
@@ -338,6 +844,34 @@ export async function handleAppApi(request, env = {}) {
     return saved({ data: { ...family, waiverStatus: familyWaiverStatus(family), bookingGate: bookingGateForFamily(family) } }, { status: 201 });
   }
 
+  if (parts[0] === "api" && parts[1] === "clubs" && parts[3] === "families" && parts[5] === "emergency-contacts" && request.method === "POST") {
+    if (!canManageFamilies(user)) {
+      return json({ error: { code: "permission_denied", message: "You cannot add emergency contacts." } }, { status: 403 });
+    }
+    const family = memoryState.families.find((item) => item.clubId === parts[2] && item.id === parts[4]);
+    if (!family) return json({ error: { code: "not_found", message: "Family not found." } }, { status: 404 });
+    const body = await parseBody(request);
+    const member = family.members.find((item) => item.id === body.memberId);
+    if (!member) return json({ error: { code: "member_not_found", message: "Family member not found." } }, { status: 404 });
+    if (!body.name || !body.phone) {
+      return json({ error: { code: "missing_required_fields", message: "Emergency contact name and phone are required." } }, { status: 400 });
+    }
+    const contact = {
+      id: newId("emergency_contact"),
+      clubId: parts[2],
+      userId: member.userId,
+      name: body.name,
+      relationship: body.relationship || "",
+      phone: body.phone,
+      email: body.email || "",
+      isPrimary: body.isPrimary === true || body.isPrimary === "true"
+    };
+    memoryState.emergencyContacts = memoryState.emergencyContacts || [];
+    memoryState.emergencyContacts.push(contact);
+    family.reviewStatus = "pending_admin_review";
+    return saved({ data: contact }, { status: 201 });
+  }
+
   if (parts[0] === "api" && parts[1] === "clubs" && parts[3] === "families" && parts[5] === "review" && request.method === "POST") {
     if (!canReviewMembership(user)) {
       return json({ error: { code: "permission_denied", message: "Only Club Admin or Super Admin can review memberships." } }, { status: 403 });
@@ -382,6 +916,265 @@ export async function handleAppApi(request, env = {}) {
   }
 
   return json({ error: { code: "not_found", message: "API route not found." } }, { status: 404 });
+}
+
+export function renderLoginPage() {
+  return `<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>CourtHubs Login</title>
+      <style>
+        :root {
+          --ink: #17212b;
+          --muted: #64717f;
+          --line: #d9e1e8;
+          --surface: #f6f8fa;
+          --accent: #0f766e;
+          --accent-soft: #ddf5f1;
+          --warn: #94590d;
+          --warn-soft: #fff0d6;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+          min-height: 100vh;
+          margin: 0;
+          color: var(--ink);
+          background:
+            linear-gradient(180deg, rgba(246, 248, 250, 0.92), rgba(255, 255, 255, 0.96)),
+            url("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=1800&q=80") center / cover;
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        main {
+          display: grid;
+          min-height: 100vh;
+          grid-template-columns: minmax(0, 1fr) 420px;
+          gap: 36px;
+          align-items: center;
+          width: min(1120px, calc(100% - 28px));
+          margin: 0 auto;
+          padding: 44px 0;
+        }
+
+        h1, h2 { margin: 0; letter-spacing: 0; }
+        h1 { max-width: 680px; font-size: 54px; line-height: 1.02; }
+        h2 { font-size: 24px; }
+        p { color: var(--muted); line-height: 1.5; }
+
+        .brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 18px;
+          color: #075c55;
+          font-weight: 850;
+        }
+
+        .mark {
+          display: grid;
+          width: 38px;
+          height: 38px;
+          place-items: center;
+          border-radius: 8px;
+          background: var(--accent);
+          color: #fff;
+          font-weight: 900;
+        }
+
+        .login-card,
+        .feature {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.94);
+          box-shadow: 0 18px 52px rgba(23, 33, 43, 0.12);
+        }
+
+        .login-card { padding: 22px; }
+
+        form {
+          display: grid;
+          gap: 12px;
+          margin-top: 18px;
+        }
+
+        label {
+          display: grid;
+          gap: 6px;
+          color: var(--muted);
+          font-size: 13px;
+          font-weight: 750;
+        }
+
+        input, button {
+          min-height: 42px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          font: inherit;
+        }
+
+        input {
+          width: 100%;
+          padding: 8px 10px;
+          background: #fff;
+        }
+
+        button {
+          padding: 9px 12px;
+          background: #fff;
+          color: var(--ink);
+          font-weight: 780;
+          cursor: pointer;
+        }
+
+        button.primary {
+          border-color: var(--accent);
+          background: var(--accent);
+          color: #fff;
+        }
+
+        .demo-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+          margin-top: 14px;
+        }
+
+        .notice {
+          margin-top: 14px;
+          padding: 12px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--surface);
+          color: var(--muted);
+        }
+
+        .notice.warn {
+          border-color: #e8bd72;
+          background: var(--warn-soft);
+          color: var(--warn);
+        }
+
+        .feature-list {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+          margin-top: 24px;
+        }
+
+        .feature {
+          min-height: 112px;
+          padding: 14px;
+          box-shadow: none;
+        }
+
+        .feature strong { display: block; margin-bottom: 6px; }
+        .feature span { color: var(--muted); font-size: 14px; line-height: 1.35; }
+
+        @media (max-width: 880px) {
+          main {
+            grid-template-columns: 1fr;
+            align-items: start;
+          }
+
+          h1 { font-size: 38px; }
+          .feature-list { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 520px) {
+          .demo-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <main>
+        <section>
+          <div class="brand"><span class="mark">C</span><span>CourtHubs</span></div>
+          <h1>Run club operations from one secure workspace.</h1>
+          <p>Sign in to manage club setup, members and families, waivers, admin review, and bookable resources for the Layer 1 operating system.</p>
+          <div class="feature-list" aria-label="Layer 1 login features">
+            <article class="feature"><strong>Family records</strong><span>Grouped members, dependents, active status, and emergency contacts.</span></article>
+            <article class="feature"><strong>Waiver gate</strong><span>One family waiver controls booking access before participation.</span></article>
+            <article class="feature"><strong>Admin review</strong><span>Approve membership setup before access rules are locked.</span></article>
+          </div>
+        </section>
+
+        <section class="login-card" aria-label="Sign in">
+          <h2>Sign in</h2>
+          <p>Use an email account or choose a demo role to test permissions.</p>
+          <form data-login-form>
+            <label>Email<input name="email" type="email" value="clubadmin@beeooking.com" autocomplete="email" required></label>
+            <button class="primary" type="submit">Continue to dashboard</button>
+          </form>
+          <div class="demo-grid" data-demo-logins></div>
+          <div class="notice" data-login-result>After sign in, you will be sent to the app dashboard.</div>
+        </section>
+      </main>
+      <script>
+        const demoUsers = ${JSON.stringify(demoUsers)};
+
+        async function api(path, options = {}) {
+          const response = await fetch(path, {
+            ...options,
+            headers: {
+              "Content-Type": "application/json",
+              ...(options.headers || {})
+            }
+          });
+          const body = await response.json();
+          if (!response.ok) throw new Error(body.error?.message || "Request failed");
+          return body.data;
+        }
+
+        function roleLabel(role) {
+          return role.split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
+        }
+
+        function setResult(message, isWarning = false) {
+          const target = document.querySelector("[data-login-result]");
+          target.textContent = message;
+          target.classList.toggle("warn", isWarning);
+        }
+
+        document.querySelector("[data-demo-logins]").innerHTML = demoUsers.map((user) =>
+          "<button type='button' data-demo-user='" + user.id + "'>" + user.name + "<br><small>" + roleLabel(user.role) + "</small></button>"
+        ).join("");
+
+        document.querySelector("[data-login-form]").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const fields = Object.fromEntries(new FormData(event.currentTarget).entries());
+          try {
+            setResult("Signing in...");
+            await api("/api/auth/login", {
+              method: "POST",
+              body: JSON.stringify({ email: fields.email })
+            });
+            window.location.href = "/app";
+          } catch (error) {
+            setResult(error.message, true);
+          }
+        });
+
+        document.querySelectorAll("[data-demo-user]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            try {
+              setResult("Switching demo role...");
+              await api("/api/auth/demo-login", {
+                method: "POST",
+                body: JSON.stringify({ userId: button.dataset.demoUser })
+              });
+              window.location.href = "/app";
+            } catch (error) {
+              setResult(error.message, true);
+            }
+          });
+        });
+      </script>
+    </body>
+  </html>`;
 }
 
 export function renderAppShell() {
@@ -601,6 +1394,14 @@ export function renderAppShell() {
           font-weight: 650;
         }
 
+        .contact-line {
+          display: block;
+          margin-top: 6px;
+          color: var(--muted);
+          font-size: 12px;
+          font-weight: 650;
+        }
+
         .resource-card {
           padding: 14px;
           background: #fff;
@@ -645,14 +1446,19 @@ export function renderAppShell() {
         </header>
 
         <section class="panel">
-          <h2>Demo Authentication</h2>
-          <p>Switch roles to test what each user can do. The selection is saved in a cookie.</p>
+          <h2>Authentication</h2>
+          <p>Sign in by email to create a session cookie, or switch demo roles to test permissions.</p>
+          <form class="form-grid" data-login-form>
+            <label>Email<input name="email" type="email" value="clubadmin@beeooking.com" required></label>
+            <div class="actions"><button class="primary" type="submit">Sign in</button></div>
+          </form>
           <div class="role-buttons" data-role-buttons></div>
         </section>
 
         <nav class="tabs" aria-label="App foundation views">
           <button class="is-active" data-app-tab="setup" type="button">Club Setup</button>
           <button data-app-tab="families" type="button">Members & Families</button>
+          <button data-app-tab="review" type="button">Admin Review</button>
           <button data-app-tab="waivers" type="button">Waiver Gate</button>
           <button data-app-tab="resources" type="button">Resources</button>
         </nav>
@@ -673,6 +1479,14 @@ export function renderAppShell() {
               </div>
             </form>
             <div class="notice" data-setup-result>Setup changes will appear here.</div>
+            <form class="form-grid" data-invite-form>
+              <label>Invite email<input name="email" type="email" value="newadmin@beeooking.com" required></label>
+              <label>Role<select name="role"><option value="club_admin">Club Admin</option><option value="staff">Staff</option><option value="coach">Coach</option><option value="member">Member</option></select></label>
+              <div class="actions">
+                <button type="submit">Invite user</button>
+              </div>
+            </form>
+            <div class="notice" data-invite-result>Invite results will appear here.</div>
           </div>
         </section>
 
@@ -691,6 +1505,14 @@ export function renderAppShell() {
             </form>
           </div>
           <div class="families" data-families-list></div>
+        </section>
+
+        <section class="view" data-app-panel="review">
+          <div class="panel">
+            <h2>Admin Review Queue</h2>
+            <p>Club Admin and Super Admin approve family membership status after active and non-active members are chosen.</p>
+            <div class="families" data-review-list></div>
+          </div>
         </section>
 
         <section class="view" data-app-panel="waivers">
@@ -758,11 +1580,13 @@ export function renderAppShell() {
           const blocked = families.filter((family) => family.waiverStatus.status === "blocked").length;
           const pending = families.filter((family) => family.reviewStatus.includes("pending") || family.reviewStatus === "draft").length;
           const activeMembers = families.flatMap((family) => family.members).filter((member) => member.participationStatus === "active").length;
+          const emergencyContacts = families.flatMap((family) => family.members).flatMap((member) => member.emergencyContacts || []).length;
           document.querySelector("[data-family-stats]").innerHTML = [
             ["Families", families.length, "Saved family records"],
             ["Active members", activeMembers, "Participant-level status"],
             ["Waiver blocked", blocked, "Cannot book yet"],
-            ["Review needed", pending, "Admin approval queue"]
+            ["Review needed", pending, "Admin approval queue"],
+            ["Emergency contacts", emergencyContacts, "Saved per participant"]
           ].map(([label, value, detail]) =>
             "<article class='stat'><span>" + label + "</span><strong>" + value + "</strong><small>" + detail + "</small></article>"
           ).join("");
@@ -773,14 +1597,43 @@ export function renderAppShell() {
           renderStats(families);
           document.querySelector("[data-families-list]").innerHTML = families.map((family) => familyCard(family, true)).join("");
           document.querySelector("[data-waiver-list]").innerHTML = families.map((family) => familyCard(family, false)).join("");
+          renderReviewQueue(families);
           bindFamilyActions();
+        }
+
+        function renderReviewQueue(families) {
+          const reviewFamilies = families.filter((family) => family.reviewStatus.includes("pending") || family.reviewStatus === "draft");
+          document.querySelector("[data-review-list]").innerHTML = reviewFamilies.length ? reviewFamilies.map(reviewCard).join("") :
+            "<div class='notice'>No family records need admin review.</div>";
+        }
+
+        function reviewCard(family) {
+          const active = family.members.filter((member) => member.participationStatus === "active").length;
+          const inactive = family.members.filter((member) => member.participationStatus === "non_active").length;
+          const rows = family.members.map((member) =>
+            "<tr><th>" + escapeHtml(member.firstName + " " + member.lastName) + "<small>" + escapeHtml(member.relationship) + "</small></th>" +
+            "<td>" + escapeHtml(member.dateOfBirth) + "</td><td>" + escapeHtml(member.participationStatus) + "</td></tr>"
+          ).join("");
+          return "<article class='family-card'><div class='family-head'><div><h3>" + escapeHtml(family.name) + "</h3>" +
+            "<p>" + active + " active - " + inactive + " non-active - " + escapeHtml(family.paymentStatus) + "</p></div>" +
+            "<span class='badge " + (family.waiverStatus.status === "blocked" ? "warn" : "") + "'>" + escapeHtml(family.reviewStatus) + "</span></div>" +
+            "<div class='family-body'><table><tbody>" + rows + "</tbody></table></div>" +
+            "<div class='family-actions actions'><button type='button' class='primary' data-review-family='" + family.id + "'>Approve and lock</button>" +
+            "<button type='button' data-return-family='" + family.id + "'>Return for changes</button></div>" +
+            "<div class='notice " + (family.waiverStatus.status === "blocked" ? "warn" : "") + "'>" + escapeHtml(family.waiverStatus.label) + "</div></article>";
         }
 
         function familyCard(family, includeMemberForm) {
           const waiverClass = family.waiverStatus.status === "blocked" ? "warn" : "";
           const members = family.members.map((member) =>
-            "<tr><th>" + escapeHtml(member.firstName + " " + member.lastName) + "<small>" + escapeHtml(member.relationship) + "</small></th>" +
+            "<tr><th>" + escapeHtml(member.firstName + " " + member.lastName) + "<small>" + escapeHtml(member.relationship) + "</small>" +
+            (member.emergencyContacts || []).map((contact) =>
+              "<span class='contact-line'>" + escapeHtml(contact.name) + " - " + escapeHtml(contact.phone) + "</span>"
+            ).join("") + "</th>" +
             "<td>" + escapeHtml(member.dateOfBirth) + "</td><td>" + escapeHtml(member.participationStatus) + "</td></tr>"
+          ).join("");
+          const memberOptions = family.members.map((member) =>
+            "<option value='" + escapeHtml(member.id) + "'>" + escapeHtml(member.firstName + " " + member.lastName) + "</option>"
           ).join("");
           const addMember = includeMemberForm ? 
             "<form class='form-grid' data-add-member-form='" + family.id + "'>" +
@@ -789,7 +1642,14 @@ export function renderAppShell() {
             "<label>DOB<input name='dateOfBirth' type='date' value='2015-01-01' required></label>" +
             "<label>Relationship<select name='relationship'><option value='dependent'>Dependent</option><option value='spousal_member'>Spousal member</option></select></label>" +
             "<label>Status<select name='participationStatus'><option value='active'>Active</option><option value='non_active'>Non-active</option></select></label>" +
-            "<div class='actions'><button type='submit'>Add member</button></div></form>" : "";
+            "<div class='actions'><button type='submit'>Add member</button></div></form>" +
+            "<form class='form-grid' data-add-contact-form='" + family.id + "'>" +
+            "<label>Member<select name='memberId'>" + memberOptions + "</select></label>" +
+            "<label>Contact name<input name='name' value='Emergency Contact' required></label>" +
+            "<label>Relationship<input name='relationship' value='Parent'></label>" +
+            "<label>Phone<input name='phone' value='555-0101' required></label>" +
+            "<label>Email<input name='email' type='email' value=''></label>" +
+            "<div class='actions'><button type='submit'>Add emergency contact</button></div></form>" : "";
           return "<article class='family-card'><div class='family-head'><div><h3>" + escapeHtml(family.name) + "</h3><p>" + escapeHtml(family.reviewStatus) + "</p></div>" +
             "<span class='badge " + waiverClass + "'>" + escapeHtml(family.waiverStatus.label) + "</span></div>" +
             "<div class='family-body'><table><tbody>" + members + "</tbody></table>" + addMember + "</div>" +
@@ -814,6 +1674,18 @@ export function renderAppShell() {
               const body = Object.fromEntries(new FormData(form).entries());
               try {
                 await api("/api/clubs/" + state.clubId + "/families/" + form.dataset.addMemberForm + "/members", { method: "POST", body: JSON.stringify(body) });
+                await load();
+              } catch (error) {
+                alert(error.message);
+              }
+            });
+          });
+          document.querySelectorAll("[data-add-contact-form]").forEach((form) => {
+            form.addEventListener("submit", async (event) => {
+              event.preventDefault();
+              const body = Object.fromEntries(new FormData(form).entries());
+              try {
+                await api("/api/clubs/" + state.clubId + "/families/" + form.dataset.addContactForm + "/emergency-contacts", { method: "POST", body: JSON.stringify(body) });
                 await load();
               } catch (error) {
                 alert(error.message);
@@ -848,6 +1720,16 @@ export function renderAppShell() {
               }
             });
           });
+          document.querySelectorAll("[data-return-family]").forEach((button) => {
+            button.addEventListener("click", async () => {
+              try {
+                await api("/api/clubs/" + state.clubId + "/families/" + button.dataset.returnFamily + "/review", { method: "POST", body: JSON.stringify({ reviewStatus: "changes_requested" }) });
+                await load();
+              } catch (error) {
+                alert(error.message);
+              }
+            });
+          });
         }
 
         document.querySelectorAll("[data-app-tab]").forEach((button) => {
@@ -856,6 +1738,20 @@ export function renderAppShell() {
             document.querySelectorAll("[data-app-tab]").forEach((item) => item.classList.toggle("is-active", item === button));
             document.querySelectorAll("[data-app-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.dataset.appPanel === tab));
           });
+        });
+
+        document.querySelector("[data-login-form]").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const fields = Object.fromEntries(new FormData(event.currentTarget).entries());
+          try {
+            await api("/api/auth/login", {
+              method: "POST",
+              body: JSON.stringify({ email: fields.email })
+            });
+            await load();
+          } catch (error) {
+            alert(error.message);
+          }
         });
 
         document.querySelector("[data-club-setup-form]").addEventListener("submit", async (event) => {
@@ -876,6 +1772,23 @@ export function renderAppShell() {
             await load();
           } catch (error) {
             document.querySelector("[data-setup-result]").textContent = error.message;
+          }
+        });
+
+        document.querySelector("[data-invite-form]").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const fields = Object.fromEntries(new FormData(event.currentTarget).entries());
+          const result = document.querySelector("[data-invite-result]");
+          try {
+            const invite = await api("/api/clubs/" + state.clubId + "/invites", {
+              method: "POST",
+              body: JSON.stringify(fields)
+            });
+            result.classList.remove("warn");
+            result.textContent = invite.message;
+          } catch (error) {
+            result.classList.add("warn");
+            result.textContent = error.message;
           }
         });
 
