@@ -2395,7 +2395,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/app") {
+    if (url.pathname === "/" || url.pathname === "/app" || url.pathname.startsWith("/app/")) {
       return new Response(renderAppShell(), {
         headers: {
           "Content-Type": "text/html; charset=utf-8"
