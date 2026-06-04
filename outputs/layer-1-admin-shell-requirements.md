@@ -178,25 +178,57 @@ Required tables:
 Club Admin:
 
 - Can manage users, families, waivers, and emergency contacts inside the active club.
+- Can control staff, coach, and member access levels.
+- Can edit member accounts.
+- Can reserve spaces for event bookings or under other users' names.
+- Can manage payroll and see payments for all staff and coaches.
+- Can manage timetables for coaching staff.
+- Can override coach accounts and staff accounts.
+- Cannot edit payment structure or core pricing; only Super Admin can do that.
+
+Staff:
+
+- Can make bookings on behalf of members and non-members.
+- Can book coaching on behalf of customers.
+- Can edit club member accounts.
+- Can book ahead up to 12 months when front desk access allows it.
+- Can review and send customer invoices and payment records.
+- Can upgrade and manage payment and membership on behalf of the customer.
+- Can apply credits up to a Club Admin-defined limit to resolve customer issues.
 
 Parent:
 
 - Can manage children linked through family relationships.
-- Can sign waivers for children.
+- Can act on behalf of child accounts and receive all child notifications.
+- Can see child payment information.
+- Can switch back to their own non-member account for personal bookings.
+- Can sign family waivers.
 - Cannot register children for club activity until required waivers are complete.
 
 Member:
 
 - Can manage own profile and emergency contacts.
 - Must provide date of birth during profile setup.
+- Can see all bookable areas and pay member rates.
 
 Coach:
 
-- Can view assigned participant details only when permitted.
+- Can view assigned participant details and all member accounts but cannot edit member information.
+- Can only see payments owed to them for lessons, clinics, and related coaching work.
+- Cannot see other staff or coach payments.
+- Can book their own lessons, clinics, and courts under their name.
+- Can review registers and add walk-ins to clinics or lessons, triggering payment from customer details where available.
+- Can edit availability and diary/calendar integration.
+- Can modify their public coach profile.
 
 Super Admin:
 
 - Can support clubs through audited cross-club workflows.
+- Can access all areas, contacts, profiles, accounts, pricing, timings, payments, and edits.
+- Is the only role that can grant Club Admin access.
+- Controls access rights for all other users.
+- Controls onboarding for staff and coach accounts.
+- Can set all pricing and payment structures.
 - Must choose supported club activities as the first setup step.
 - Must choose the approved organization email domain during club setup.
 - Can enable racket sports: tennis, squash, padel, pickleball, table tennis, and badminton.

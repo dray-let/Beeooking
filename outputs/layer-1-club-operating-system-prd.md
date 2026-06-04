@@ -35,6 +35,7 @@ Layer 1 is successful when a club can:
 - Coach: Coach who manages availability, sessions, attendance, and assigned programs.
 - Parent: Adult account holder who manages children, waivers, bookings, and payments.
 - Member: Player or participant who books courts, registers for programs, and receives communications.
+- Non Member: Account holder who can see and book spaces at non-member rates.
 
 ## Core Modules
 
@@ -65,6 +66,11 @@ Acceptance criteria:
 - Additional family membership members must be dependents under 18.
 - A parent can manage child profiles, waivers, bookings, and payments.
 - A club admin can assign roles within their club only.
+- Only Super Admin can grant Club Admin access.
+- Only Super Admin can edit payment structure and core pricing.
+- Club Admin can manage staff, coaches, members, payroll visibility, coach/staff payments, timetables, event bookings, and operational overrides.
+- Staff can book on behalf of customers, edit member accounts, review/send invoices, manage customer memberships/payments, and apply credits within Club Admin-defined limits.
+- Coach can view only their own payments, book their own lessons/clinics/courts, view member accounts without editing, manage registers, add walk-ins, edit availability, and manage their public profile.
 - Super Admin, Club Admin, Staff, and Coach accounts must use an email address from the approved organization domain.
 - Super Admin chooses the approved organization email domain during club setup.
 - Invites for Super Admin, Club Admin, Staff, and Coach roles are blocked when the email domain does not match the approved organization domain.
@@ -82,6 +88,7 @@ Capabilities:
 - Junior memberships.
 - Family memberships.
 - Active and non-active member pricing.
+- Base Member, Class Member, Rackets Member, Health Member, Parent, and Non Member access levels.
 - Membership privileges.
 - Renewal status.
 - Member standing.
@@ -94,6 +101,11 @@ Acceptance criteria:
 - A family membership can contain active and non-active participants.
 - Pricing is calculated by participant status, so an adult can be non-active while a child on the same family membership is active.
 - Non-active members can remain account holders, guardians, billing owners, waiver signers, and communication recipients without active playing privileges.
+- Base Members see all bookable areas and pay member rates, planned around 20% off.
+- Class Members have class access included on top of base membership and pay member rates for racket bookings.
+- Rackets Members receive court access with configurable restrictions such as 2 max peak-time bookings and unlimited off-peak bookings.
+- Health Members receive recovery suite access and admin-controlled reduced health/massage pricing.
+- Non Members can see all bookable spaces and book/pay at non-member rates.
 - Members or parents can choose active/non-active status for each participant during membership setup.
 - Club admins review participant status, pricing, and membership type before final approval.
 - Once the membership type is approved, participants cannot self-change active/non-active status and must contact the club admin.

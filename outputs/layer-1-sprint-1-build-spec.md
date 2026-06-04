@@ -36,6 +36,7 @@ Sprint 1 excludes:
 - As a club admin, I can invite a user to my club.
 - As a club admin, I can assign a role to a user within my club.
 - As a club admin, I can only invite Super Admin, Club Admin, Staff, or Coach users with the approved organization email domain.
+- As a club admin, I can control staff, coach, and member access levels but cannot grant Club Admin access or edit core pricing/payment structure.
 - As a club admin, I can create and edit member profiles.
 - As a club admin, I require date of birth for every member profile.
 - As a club admin, I can manage members and family groups in one area.
@@ -66,7 +67,9 @@ Sprint 1 excludes:
 ### Coach
 
 - As a coach, I can manage my own profile.
-- As a coach, I can view permitted participant profile and emergency information.
+- As a coach, I can view member profiles without editing member information.
+- As a coach, I can view only my own lesson, clinic, and coaching payments.
+- As a coach, I can manage my availability, diary integration, registers, walk-ins, and public coach profile.
 
 ## Data Objects In Scope
 
@@ -95,6 +98,10 @@ Sprint 1 excludes:
 - A club admin cannot access another club's users, families, waivers, or emergency contacts.
 - Super Admin, Club Admin, Staff, and Coach accounts require the approved organization email domain.
 - Parent and Member accounts can use personal email addresses unless the club config requires otherwise.
+- Only Super Admin can grant Club Admin access.
+- Only Super Admin can edit core pricing and payment structures.
+- Staff can apply credits only up to Club Admin-defined limits.
+- Coaches cannot view other staff or coach payments.
 - Members and family members are grouped together in one dashboard area.
 - A dependent child is created after an adult account exists.
 - A family membership can include one main member and one spousal member.

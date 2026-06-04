@@ -157,11 +157,13 @@ Key fields:
 - `club_id`
 - `user_id`
 - `role`
+- `permissions`
 - `validation_metadata`
 
 Rules:
 
 - Super Admin, Club Admin, Staff, and Coach role assignments require an email from the club's approved organization domain.
+- Permissions should store role-specific operational limits, such as staff credit limits or booking authority.
 - Validation metadata should record whether the organization domain check passed and which domain was used.
 
 ### Family
@@ -262,11 +264,14 @@ Key fields:
 - `id`
 - `club_id`
 - `name`
+- `access_level`
 - `billing_interval`
 - `price_cents`
 - `currency`
 - `eligibility_rules`
 - `pricing_rules`
+- `access_rules`
+- `rate_modifiers`
 - `self_service_opt_in`
 - `admin_required_for_opt_out`
 - `privileges`
@@ -281,6 +286,10 @@ Rules:
 
 - Monthly membership plans can allow self-service opt-in after payment.
 - Monthly membership opt-out requires club admin contact and review.
+- Base Member, Class Member, Rackets Member, Health Member, Parent, and Non Member access levels are represented by `access_level`.
+- Rackets access rules can store peak booking limits such as 2 max peak-time bookings and unlimited off-peak bookings.
+- Health access rules can store recovery suite inclusion and admin-controlled massage or health pricing reductions.
+- Non Member rules can allow visibility of all bookable spaces while requiring non-member rates.
 
 ### Membership
 
@@ -536,8 +545,12 @@ Can:
 
 - Create and manage clubs.
 - View cross-club health and revenue.
-- Access club settings for support.
-- Manage platform-level configuration.
+- Access all club areas, contacts, profiles, accounts, pricing, timings, payments, and edits.
+- Set all pricing, payment structures, booking timings, resource rules, and membership privileges.
+- Grant Club Admin access. No other role can grant Club Admin.
+- Control access rights for all other users.
+- Control onboarding for staff and coach accounts.
+- Manage platform-level and club-level configuration.
 
 Cannot:
 
@@ -547,7 +560,13 @@ Cannot:
 
 Can:
 
-- Manage club settings, branding, rules, facilities, bookable resources, and pricing.
+- Manage club settings, branding, rules, facilities, and bookable resources within Super Admin pricing/payment boundaries.
+- Manage staff, coaches, and all member levels.
+- Edit member accounts.
+- Reserve spaces for events or under other users' names.
+- Manage payroll and view payments for all staff and coaches.
+- Manage coaching staff timetables.
+- Override coach and staff accounts.
 - Manage members, families, coaches, staff, memberships, bookings, programs, payments, and messages.
 - View club reporting.
 
@@ -555,11 +574,19 @@ Cannot:
 
 - Access other clubs.
 - Change Beeooking platform configuration.
+- Edit payment structure or core pricing. Only Super Admin can do that.
 
 ### Staff
 
 Can:
 
+- Make bookings on behalf of members and non-members.
+- Book coaching on behalf of customers.
+- Edit club member accounts.
+- Book ahead up to 12 months when front desk access allows it.
+- Review and send invoices for customers and payments.
+- Upgrade and manage payment and membership on behalf of customers.
+- Apply credits up to a Club Admin-defined limit when resolving customer issues.
 - Manage assigned operational workflows such as check-in, bookings, registrations, and member support.
 
 Cannot:
@@ -570,22 +597,32 @@ Cannot:
 
 Can:
 
+- View only payments owed to them for lessons, clinics, and related work.
+- Book their own lessons, clinics, and courts under their name.
+- View all member accounts without editing member information.
+- Review registers and add walk-ins to clinics or lessons, triggering payment from saved customer details where available.
+- Edit availability and connect diary/calendar integration.
+- Modify their public front-end coach profile.
 - View assigned programs, sessions, and participants.
-- Manage availability if permitted.
-- View relevant member contact and guardian information.
 
 Cannot:
 
 - View full club financials.
+- View other staff or coach payments.
+- Edit member account information.
 - Manage club-wide settings.
 
 ### Parent
 
 Can:
 
-- Manage own profile.
+- Manage own non-member profile.
 - Manage child profiles in their family.
-- Sign waivers for children.
+- Act on behalf of child accounts.
+- Receive all child notifications.
+- See child payment information.
+- Switch back to their own non-member account for personal bookings.
+- Sign family waivers.
 - Book, register, and pay for children.
 - Receive child-related communications.
 
@@ -598,12 +635,47 @@ Cannot:
 Can:
 
 - Manage own profile.
-- Book courts and eligible programs.
+- See all bookable areas.
+- Pay member rates, slated around 20% off.
+- Access gym barrier entry when included by membership.
+- Book courts, classes, health suite, and eligible programs when access rules and payment requirements are satisfied.
 - View own bookings, payments, and messages.
 
 Cannot:
 
 - Manage other users unless linked as guardian or billing owner.
+
+### Class Member
+
+Can:
+
+- Access all classes without per-class payment when added on top of base membership.
+- See racket bookings and pay member rates.
+
+### Rackets Member
+
+Can:
+
+- Access courts subject to club-set restrictions.
+- Hold up to 2 peak-time bookings when configured.
+- Book unlimited off-peak sessions when configured.
+- See other bookable spaces and pay member rates.
+
+### Health Member
+
+Can:
+
+- Access the recovery suite when included.
+- Receive heavily reduced massage pricing controlled by admin.
+- Book health and recovery services when available.
+
+### Non Member
+
+Can:
+
+- Manage account details.
+- See all bookable spaces.
+- Book and pay non-member rates.
 
 ## Multi-Tenant Design
 

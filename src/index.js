@@ -49,6 +49,22 @@ const layerOne = {
     "Message"
   ],
   roles: ["Super Admin", "Club Admin", "Staff", "Coach", "Parent", "Member"],
+  permissionMatrix: [
+    ["Super Admin", "Full access", "Can access all areas, contacts, profiles, pricing, timings, accounts, edits, and access rights. Only Super Admin can grant Club Admin access and controls staff/coach onboarding."],
+    ["Club Admin", "Club operations", "Can manage staff, coaches, members, timetables, payroll visibility, staff/coach payments, bookings under other names, and member edits. Cannot edit payment structure or core pricing."],
+    ["Staff", "Front desk", "Can make bookings for members/non-members, book coaching, edit member accounts, book up to 12 months ahead, review invoices, manage customer memberships/payments, and apply credits within Club Admin limits."],
+    ["Coach", "Coach scoped", "Can see only their own lesson/clinic payments, book lessons/clinics/courts under their name, view member accounts without editing, manage registers, add walk-ins with payment, edit availability, and manage public profile."],
+    ["Parent", "Guardian access", "Not a member by default. Can act on behalf of children, receive child notifications, see child payment information, or use their own non-member account."],
+    ["Member", "Member access", "Can see all bookable areas and pay member rates. Base membership includes gym barrier access, while courts, classes, and health suite access can still require paid booking or add-ons."]
+  ],
+  membershipAccessLevels: [
+    ["Base Member", "Member rate", "Sees all bookable areas. Pays member rate, planned around 20% off. Gym access is included; courts, classes, and health suite can still require paid booking or access add-ons."],
+    ["Class Member", "Classes included", "Add-on to membership. Includes all-access classes without per-class payment. Racket bookings remain visible and paid at member rates."],
+    ["Rackets Member", "Court access rules", "Add-on to membership. Court access included with configurable restrictions, including 2 max peak-time bookings and unlimited off-peak bookings by club rules."],
+    ["Health Member", "Health pricing/access", "Add-on to membership. Recovery suite access included and massage pricing is more heavily reduced, with prices controlled by admin."],
+    ["Parent", "Child-linked", "Can manage and pay for child activity but is not automatically a member. Can switch to their own non-member account for personal bookings."],
+    ["Non Member", "Non-member rate", "Can see all bookable spaces and book/pay at non-member rates. Essentially can see, but must pay."]
+  ],
   organizationEmailRules: [
     ["Domain selection", "Super Admin", "Super Admin chooses the approved organization email domain during club setup."],
     ["Required roles", "Org email required", "Super Admin, Club Admin, Staff, and Coach accounts must use an email from the approved organization domain."],
@@ -337,6 +353,34 @@ function renderOrganizationEmailRows() {
         <tr>
           <th scope="row">${rule}</th>
           <td><span class="status-chip">${requirement}</span></td>
+          <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderPermissionRows() {
+  return layerOne.permissionMatrix
+    .map(
+      ([role, scope, body]) => `
+        <tr>
+          <th scope="row">${role}</th>
+          <td><span class="status-chip">${scope}</span></td>
+          <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderMembershipAccessRows() {
+  return layerOne.membershipAccessLevels
+    .map(
+      ([level, access, body]) => `
+        <tr>
+          <th scope="row">${level}</th>
+          <td><span class="status-chip">${access}</span></td>
           <td>${body}</td>
         </tr>
       `
@@ -1406,6 +1450,18 @@ function renderPage() {
           <div class="role-strip">${layerOne.roles.map((item) => `<span class="pill">${item}</span>`).join("")}</div>
         </section>
 
+        <section aria-labelledby="permission-matrix-title">
+          <div class="section-heading">
+            <h2 id="permission-matrix-title">Role Permission Matrix</h2>
+            <p>Super Admin owns pricing, access grants, and staff onboarding; club roles operate within those boundaries.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderPermissionRows()}</tbody>
+            </table>
+          </div>
+        </section>
+
         <section aria-labelledby="sprint-one-title">
           <div class="section-heading">
             <h2 id="sprint-one-title">Sprint 1 Foundation Readiness</h2>
@@ -1456,6 +1512,18 @@ function renderPage() {
           <div class="table-wrap">
             <table>
               <tbody>${renderMembershipPricingRows()}</tbody>
+            </table>
+          </div>
+        </section>
+
+        <section aria-labelledby="membership-access-title">
+          <div class="section-heading">
+            <h2 id="membership-access-title">Member Access Levels</h2>
+            <p>Base membership and add-ons control rates, included access, and restrictions across classes, rackets, health, and non-member booking.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderMembershipAccessRows()}</tbody>
             </table>
           </div>
         </section>
@@ -1575,6 +1643,8 @@ export default {
       return new Response(JSON.stringify({
         readiness: layerOne.sprintOneReadiness,
         rules: layerOne.layerOneRules,
+        permissionMatrix: layerOne.permissionMatrix,
+        membershipAccessLevels: layerOne.membershipAccessLevels,
         organizationEmailRules: layerOne.organizationEmailRules,
         activityOptions: layerOne.activityOptions,
         activitySetupRules: layerOne.activitySetupRules,
