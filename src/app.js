@@ -57,6 +57,18 @@ const initialState = {
       ]
     }
   ],
+  emergencyContacts: [
+    {
+      id: "emergency_contact_demo",
+      clubId: "club_demo",
+      userId: "user_child",
+      name: "Demo Parent",
+      relationship: "Parent",
+      phone: "555-0100",
+      email: "parent@example.com",
+      isPrimary: true
+    }
+  ],
   waivers: [
     {
       id: "waiver_family_v1",
@@ -125,6 +137,19 @@ function mapFamilyMember(row) {
     relationship: row.relationship,
     participationStatus: row.participation_status,
     isGuardian: Boolean(row.is_guardian)
+  };
+}
+
+function mapEmergencyContact(row) {
+  return {
+    id: row.id,
+    clubId: row.club_id,
+    userId: row.user_id,
+    name: row.name,
+    relationship: row.relationship || "",
+    phone: row.phone,
+    email: row.email || "",
+    isPrimary: Boolean(row.is_primary)
   };
 }
 
@@ -202,6 +227,7 @@ async function readD1State(db) {
   const activityRows = await all(db, "select * from club_activities order by created_at, activity_type");
   const familyRows = await all(db, "select * from families order by created_at, name");
   const familyMemberRows = await all(db, "select * from family_members order by created_at, relationship");
+  const emergencyContactRows = await all(db, "select * from emergency_contacts order by created_at, name");
   const waiverRows = await all(db, "select * from waivers order by created_at, name");
   const signatureRows = await all(db, "select * from waiver_signatures order by signed_at");
 
@@ -224,6 +250,7 @@ async function readD1State(db) {
         familyMemberRows.filter((member) => member.family_id === family.id).map(mapFamilyMember)
       )
     ),
+    emergencyContacts: emergencyContactRows.map(mapEmergencyContact),
     waivers: waiverRows.map(mapWaiver),
     waiverSignatures: signatureRows.map(mapSignature)
   };
@@ -334,6 +361,27 @@ async function writeD1State(db, state) {
         )
         .run();
     }
+  }
+
+  for (const club of state.clubs) {
+    await db.prepare("delete from emergency_contacts where club_id = ?").bind(club.id).run();
+  }
+  for (const contact of state.emergencyContacts || []) {
+    await db
+      .prepare(
+        "insert into emergency_contacts (id, club_id, user_id, name, relationship, phone, email, is_primary) values (?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .bind(
+        contact.id,
+        contact.clubId,
+        contact.userId,
+        contact.name,
+        contact.relationship || null,
+        contact.phone,
+        contact.email || null,
+        contact.isPrimary ? 1 : 0
+      )
+      .run();
   }
 
   for (const waiver of state.waivers) {
@@ -582,10 +630,15 @@ function bookingGateForFamily(family) {
 }
 
 function withDerivedState() {
+  const emergencyContacts = memoryState.emergencyContacts || [];
   return {
     ...memoryState,
     families: memoryState.families.map((family) => ({
       ...family,
+      members: family.members.map((member) => ({
+        ...member,
+        emergencyContacts: emergencyContacts.filter((contact) => contact.userId === member.userId)
+      })),
       waiverStatus: familyWaiverStatus(family),
       bookingGate: bookingGateForFamily(family)
     }))
@@ -789,6 +842,34 @@ export async function handleAppApi(request, env = {}) {
     family.members.push(member);
     family.reviewStatus = "pending_admin_review";
     return saved({ data: { ...family, waiverStatus: familyWaiverStatus(family), bookingGate: bookingGateForFamily(family) } }, { status: 201 });
+  }
+
+  if (parts[0] === "api" && parts[1] === "clubs" && parts[3] === "families" && parts[5] === "emergency-contacts" && request.method === "POST") {
+    if (!canManageFamilies(user)) {
+      return json({ error: { code: "permission_denied", message: "You cannot add emergency contacts." } }, { status: 403 });
+    }
+    const family = memoryState.families.find((item) => item.clubId === parts[2] && item.id === parts[4]);
+    if (!family) return json({ error: { code: "not_found", message: "Family not found." } }, { status: 404 });
+    const body = await parseBody(request);
+    const member = family.members.find((item) => item.id === body.memberId);
+    if (!member) return json({ error: { code: "member_not_found", message: "Family member not found." } }, { status: 404 });
+    if (!body.name || !body.phone) {
+      return json({ error: { code: "missing_required_fields", message: "Emergency contact name and phone are required." } }, { status: 400 });
+    }
+    const contact = {
+      id: newId("emergency_contact"),
+      clubId: parts[2],
+      userId: member.userId,
+      name: body.name,
+      relationship: body.relationship || "",
+      phone: body.phone,
+      email: body.email || "",
+      isPrimary: body.isPrimary === true || body.isPrimary === "true"
+    };
+    memoryState.emergencyContacts = memoryState.emergencyContacts || [];
+    memoryState.emergencyContacts.push(contact);
+    family.reviewStatus = "pending_admin_review";
+    return saved({ data: contact }, { status: 201 });
   }
 
   if (parts[0] === "api" && parts[1] === "clubs" && parts[3] === "families" && parts[5] === "review" && request.method === "POST") {
@@ -1054,6 +1135,14 @@ export function renderAppShell() {
           font-weight: 650;
         }
 
+        .contact-line {
+          display: block;
+          margin-top: 6px;
+          color: var(--muted);
+          font-size: 12px;
+          font-weight: 650;
+        }
+
         .resource-card {
           padding: 14px;
           background: #fff;
@@ -1223,11 +1312,13 @@ export function renderAppShell() {
           const blocked = families.filter((family) => family.waiverStatus.status === "blocked").length;
           const pending = families.filter((family) => family.reviewStatus.includes("pending") || family.reviewStatus === "draft").length;
           const activeMembers = families.flatMap((family) => family.members).filter((member) => member.participationStatus === "active").length;
+          const emergencyContacts = families.flatMap((family) => family.members).flatMap((member) => member.emergencyContacts || []).length;
           document.querySelector("[data-family-stats]").innerHTML = [
             ["Families", families.length, "Saved family records"],
             ["Active members", activeMembers, "Participant-level status"],
             ["Waiver blocked", blocked, "Cannot book yet"],
-            ["Review needed", pending, "Admin approval queue"]
+            ["Review needed", pending, "Admin approval queue"],
+            ["Emergency contacts", emergencyContacts, "Saved per participant"]
           ].map(([label, value, detail]) =>
             "<article class='stat'><span>" + label + "</span><strong>" + value + "</strong><small>" + detail + "</small></article>"
           ).join("");
@@ -1244,8 +1335,14 @@ export function renderAppShell() {
         function familyCard(family, includeMemberForm) {
           const waiverClass = family.waiverStatus.status === "blocked" ? "warn" : "";
           const members = family.members.map((member) =>
-            "<tr><th>" + escapeHtml(member.firstName + " " + member.lastName) + "<small>" + escapeHtml(member.relationship) + "</small></th>" +
+            "<tr><th>" + escapeHtml(member.firstName + " " + member.lastName) + "<small>" + escapeHtml(member.relationship) + "</small>" +
+            (member.emergencyContacts || []).map((contact) =>
+              "<span class='contact-line'>" + escapeHtml(contact.name) + " · " + escapeHtml(contact.phone) + "</span>"
+            ).join("") + "</th>" +
             "<td>" + escapeHtml(member.dateOfBirth) + "</td><td>" + escapeHtml(member.participationStatus) + "</td></tr>"
+          ).join("");
+          const memberOptions = family.members.map((member) =>
+            "<option value='" + escapeHtml(member.id) + "'>" + escapeHtml(member.firstName + " " + member.lastName) + "</option>"
           ).join("");
           const addMember = includeMemberForm ? 
             "<form class='form-grid' data-add-member-form='" + family.id + "'>" +
@@ -1254,7 +1351,14 @@ export function renderAppShell() {
             "<label>DOB<input name='dateOfBirth' type='date' value='2015-01-01' required></label>" +
             "<label>Relationship<select name='relationship'><option value='dependent'>Dependent</option><option value='spousal_member'>Spousal member</option></select></label>" +
             "<label>Status<select name='participationStatus'><option value='active'>Active</option><option value='non_active'>Non-active</option></select></label>" +
-            "<div class='actions'><button type='submit'>Add member</button></div></form>" : "";
+            "<div class='actions'><button type='submit'>Add member</button></div></form>" +
+            "<form class='form-grid' data-add-contact-form='" + family.id + "'>" +
+            "<label>Member<select name='memberId'>" + memberOptions + "</select></label>" +
+            "<label>Contact name<input name='name' value='Emergency Contact' required></label>" +
+            "<label>Relationship<input name='relationship' value='Parent'></label>" +
+            "<label>Phone<input name='phone' value='555-0101' required></label>" +
+            "<label>Email<input name='email' type='email' value=''></label>" +
+            "<div class='actions'><button type='submit'>Add emergency contact</button></div></form>" : "";
           return "<article class='family-card'><div class='family-head'><div><h3>" + escapeHtml(family.name) + "</h3><p>" + escapeHtml(family.reviewStatus) + "</p></div>" +
             "<span class='badge " + waiverClass + "'>" + escapeHtml(family.waiverStatus.label) + "</span></div>" +
             "<div class='family-body'><table><tbody>" + members + "</tbody></table>" + addMember + "</div>" +
@@ -1279,6 +1383,18 @@ export function renderAppShell() {
               const body = Object.fromEntries(new FormData(form).entries());
               try {
                 await api("/api/clubs/" + state.clubId + "/families/" + form.dataset.addMemberForm + "/members", { method: "POST", body: JSON.stringify(body) });
+                await load();
+              } catch (error) {
+                alert(error.message);
+              }
+            });
+          });
+          document.querySelectorAll("[data-add-contact-form]").forEach((form) => {
+            form.addEventListener("submit", async (event) => {
+              event.preventDefault();
+              const body = Object.fromEntries(new FormData(form).entries());
+              try {
+                await api("/api/clubs/" + state.clubId + "/families/" + form.dataset.addContactForm + "/emergency-contacts", { method: "POST", body: JSON.stringify(body) });
                 await load();
               } catch (error) {
                 alert(error.message);

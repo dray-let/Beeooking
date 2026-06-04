@@ -19,12 +19,13 @@ The app foundation now has:
 - Organization-domain invite validation for Club Admin, Staff, and Coach roles.
 - Members and families API.
 - Add dependent/spousal member flow with date-of-birth validation.
+- Save emergency contacts per family member.
 - Family membership review action.
 - Family waiver signing.
 - Booking gate check that blocks when waiver is missing.
 - D1-ready migration in `migrations/0001_layer1_foundation.sql`.
 
-When a Cloudflare D1 database is bound as `DB`, the app reads and writes the real foundation tables for clubs, activities, users, families, family members, waivers, and waiver signatures. Without the binding, it falls back to in-memory state so the preview still works.
+When a Cloudflare D1 database is bound as `DB`, the app reads and writes the real foundation tables for clubs, activities, users, families, family members, emergency contacts, waivers, and waiver signatures. Without the binding, it falls back to in-memory state so the preview still works.
 
 ## Connect Cloudflare D1
 
