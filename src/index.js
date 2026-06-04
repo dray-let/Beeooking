@@ -101,6 +101,15 @@ const layerOne = {
     ["Waivers", "Required access gate", "Required waivers must be completed before booking, program registration, or participation."],
     ["Emergency contacts", "Ready to specify", "Contacts attach to a user inside a club and need controlled coach/admin visibility."]
   ],
+  layerZeroCompletion: [
+    ["Permission actions", "Locked", "Named action keys define pricing control, Club Admin grants, credits, booking for others, payroll visibility, profile access, timetables, registers, and coach profile management."],
+    ["Booking rules", "Locked", "Peak/off-peak windows, role booking horizons, racket peak limits, resource conflicts, coach conflicts, cancellation rules, and waitlists are defined."],
+    ["Pricing logic", "Locked", "Membership pricing uses access level, active/non-active status, add-ons, rate modifiers, admin review, and self-service monthly opt-in."],
+    ["Waiver enforcement", "Locked", "One family waiver can cover all listed members, and incomplete waivers block bookings, registrations, waitlists, check-ins, and walk-ins."],
+    ["Database guardrails", "Ready", "Schema includes club scoping, booking time checks, role indexes, waiver indexes, credit adjustments, and audit logs."],
+    ["API contracts", "Ready", "Setup, invites, roles, families, dependents, waivers, memberships, booking, and credit routes are specified."],
+    ["Seed data", "Ready", "Demo club includes sports, resources, users, roles, family, waiver, and membership plan examples."]
+  ],
   layerOneRules: [
     "Required waivers must be completed before a member can book a court.",
     "Required waivers must be completed before a parent can register a child for clinics, camps, courses, or sessions.",
@@ -325,6 +334,20 @@ function renderMembershipPricingRows() {
         <tr>
           <th scope="row">${memberStatus}</th>
           <td><span class="status-chip">${pricingRule}</span></td>
+          <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderLayerZeroRows() {
+  return layerOne.layerZeroCompletion
+    .map(
+      ([area, status, body]) => `
+        <tr>
+          <th scope="row">${area}</th>
+          <td><span class="status-chip">${status}</span></td>
           <td>${body}</td>
         </tr>
       `
@@ -1290,9 +1313,21 @@ function renderPage() {
           </div>
           <aside class="status-panel" aria-label="Current build focus">
             <span class="label">Build Focus</span>
-            <p>Sprint 0 and Sprint 1: tenant model, club objects, roles, profiles, family accounts, waivers, and emergency contacts.</p>
+            <p>Sprint 0 is now finished as the foundation spec. Sprint 1 can build profiles, family accounts, waivers, and emergency contacts from it.</p>
           </aside>
         </header>
+
+        <section aria-labelledby="layer-zero-title">
+          <div class="section-heading">
+            <h2 id="layer-zero-title">Sprint 0 Foundation Complete</h2>
+            <p>Layer 0 now defines the architecture, permissions, booking rules, pricing behavior, waiver enforcement, database guardrails, API contracts, and seed data.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderLayerZeroRows()}</tbody>
+            </table>
+          </div>
+        </section>
 
         <section class="admin-dashboard" aria-labelledby="admin-dashboard-title">
           <div class="dashboard-toolbar">
@@ -1639,8 +1674,9 @@ export default {
       });
     }
 
-        if (url.pathname === "/api/layer-1/sprint-1") {
+    if (url.pathname === "/api/layer-1/sprint-1") {
       return new Response(JSON.stringify({
+        layerZeroCompletion: layerOne.layerZeroCompletion,
         readiness: layerOne.sprintOneReadiness,
         rules: layerOne.layerOneRules,
         permissionMatrix: layerOne.permissionMatrix,

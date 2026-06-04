@@ -12,9 +12,14 @@ Stories:
 - Define role assignments for Super Admin, Club Admin, Staff, Coach, Parent, and Member.
 - Define detailed role permissions for Super Admin, Club Admin, Staff, Coach, Parent, Member, and Non Member access.
 - Define member access levels: Base Member, Class Member, Rackets Member, Health Member, Parent, and Non Member.
+- Define exact permission action keys for pricing, admin grants, credits, booking for others, payroll visibility, profile access, timetables, registers, and coach profile management.
 - Define club, facility, bookable resource, family, waiver, membership, booking, payment, and message entities.
 - Define tenant scoping rules for every club-owned object.
-- Define initial booking conflict rules.
+- Define peak/off-peak rules, booking horizons, cancellation windows, and initial booking conflict rules.
+- Define membership pricing logic for active/non-active participants, member/non-member rates, add-ons, and admin approval.
+- Define waiver enforcement rules and activity blocks when waiver is incomplete.
+- Define audit logging requirements for privileged actions and overrides.
+- Define Sprint 0 API contract for setup, families, waivers, memberships, bookings, roles, and credits.
 - Define Stripe object mapping for customers, subscriptions, payments, invoices, and refunds.
 - Create seed data for one sample club.
 
@@ -34,6 +39,12 @@ Acceptance criteria:
 - Club Admin can manage staff, coaches, members, timetables, payroll visibility, event bookings, and operational overrides.
 - Staff can manage bookings, invoices, customer memberships/payments, and credits within Club Admin limits.
 - Coaches can view only their own payments and cannot edit member information.
+- Booking rules include role horizons, peak/off-peak rules, racket peak booking limits, waiver gating, and resource conflict checks.
+- Membership pricing supports active/non-active participants, member/non-member rates, add-ons, and admin locking after approval.
+- Waivers block bookings, waitlists, registrations, check-ins, and walk-ins until complete.
+- Audit logs are required for Club Admin grants, pricing/payment changes, credits, overrides, on-behalf bookings, and impersonation.
+- API contracts exist before Sprint 1 implementation begins.
+- Sample seed data exists for one demo club with sports, resources, roles, family, waiver, and membership plans.
 - Initial schema can support Sprint 1 without structural rework.
 
 ## Sprint 1: Foundation
