@@ -4,6 +4,21 @@
 
 Sprint 0 defines the technical foundation for Beeooking before product features are built. The goal is to prevent rework by establishing multi-tenancy, core objects, permission boundaries, and data relationships up front.
 
+## Engineering Contract
+
+The build contract for Sprint 0 lives in `outputs/layer-0-engineering-contract.md`.
+
+That contract is the implementation source of truth for:
+
+- Permission keys and denial cases.
+- Booking rule decision order and error codes.
+- Membership pricing examples and locking behavior.
+- Waiver completion checks.
+- Row-level security expectations.
+- Audit events.
+- API request/response payloads.
+- Acceptance test cases.
+
 ## Architecture Principles
 
 - Every operational record is scoped to a `club_id`.
@@ -157,11 +172,13 @@ Key fields:
 - `club_id`
 - `user_id`
 - `role`
+- `permissions`
 - `validation_metadata`
 
 Rules:
 
 - Super Admin, Club Admin, Staff, and Coach role assignments require an email from the club's approved organization domain.
+- Permissions should store role-specific operational limits, such as staff credit limits or booking authority.
 - Validation metadata should record whether the organization domain check passed and which domain was used.
 
 ### Family
@@ -262,11 +279,14 @@ Key fields:
 - `id`
 - `club_id`
 - `name`
+- `access_level`
 - `billing_interval`
 - `price_cents`
 - `currency`
 - `eligibility_rules`
 - `pricing_rules`
+- `access_rules`
+- `rate_modifiers`
 - `self_service_opt_in`
 - `admin_required_for_opt_out`
 - `privileges`
@@ -281,6 +301,10 @@ Rules:
 
 - Monthly membership plans can allow self-service opt-in after payment.
 - Monthly membership opt-out requires club admin contact and review.
+- Base Member, Class Member, Rackets Member, Health Member, Parent, and Non Member access levels are represented by `access_level`.
+- Rackets access rules can store peak booking limits such as 2 max peak-time bookings and unlimited off-peak bookings.
+- Health access rules can store recovery suite inclusion and admin-controlled massage or health pricing reductions.
+- Non Member rules can allow visibility of all bookable spaces while requiring non-member rates.
 
 ### Membership
 
@@ -530,14 +554,55 @@ Relationships:
 
 ## Permissions
 
+Layer 0 stores permission decisions as named actions. Roles grant default actions, and club-specific overrides can add limits such as maximum credit amount or booking horizon.
+
+### Permission Action Matrix
+
+| Permission key | Super Admin | Club Admin | Staff | Coach | Parent | Member |
+| --- | --- | --- | --- | --- | --- | --- |
+| `access_all_club_records` | Yes | Club only | No | No | No | No |
+| `grant_club_admin` | Yes | No | No | No | No | No |
+| `manage_role_permissions` | Yes | Staff, coach, member levels only | No | No | No | No |
+| `manage_staff_onboarding` | Yes | Yes | No | No | No | No |
+| `manage_coach_onboarding` | Yes | Yes | No | No | No | No |
+| `edit_member_profile` | Yes | Yes | Yes | No | Own family only | Own only |
+| `view_member_profile` | Yes | Yes | Yes | Yes | Own family only | Own only |
+| `edit_payment_structure` | Yes | No | No | No | No | No |
+| `edit_core_pricing` | Yes | No | No | No | No | No |
+| `view_staff_coach_payroll` | Yes | Yes | No | Own payments only | No | No |
+| `book_for_others` | Yes | Yes | Yes | Own sessions only | Own family only | Own only |
+| `book_12_months_ahead` | Yes | Yes | Yes | No | No | No |
+| `reserve_event_space` | Yes | Yes | No | No | No | No |
+| `send_invoice` | Yes | Yes | Yes | No | No | No |
+| `manage_customer_membership` | Yes | Yes | Yes | No | Own family only | Own only |
+| `apply_credit` | Yes | Yes | Limited by `credit_limit_cents` | No | No | No |
+| `manage_timetables` | Yes | Yes | No | Own availability only | No | No |
+| `manage_registers` | Yes | Yes | Yes | Own sessions only | No | No |
+| `add_walk_in_with_payment` | Yes | Yes | Yes | Own sessions only | No | No |
+| `manage_public_coach_profile` | Yes | Yes | No | Own profile only | No | No |
+| `sign_family_waiver` | No | No | No | No | Own family only | No |
+
+Permission implementation rules:
+
+- `grant_club_admin` is never grantable by Club Admin, Staff, Coach, Parent, Member, or Non Member.
+- `edit_payment_structure` and `edit_core_pricing` are Super Admin-only.
+- Staff credit authority is stored in role permissions as `credit_limit_cents`.
+- Coach payment access is always filtered to the coach's own payable records.
+- Parent access is always filtered to linked family members and never unrelated children.
+- Member and Non Member booking access is controlled by membership plan access rules and rate rules.
+
 ### Super Admin
 
 Can:
 
 - Create and manage clubs.
 - View cross-club health and revenue.
-- Access club settings for support.
-- Manage platform-level configuration.
+- Access all club areas, contacts, profiles, accounts, pricing, timings, payments, and edits.
+- Set all pricing, payment structures, booking timings, resource rules, and membership privileges.
+- Grant Club Admin access. No other role can grant Club Admin.
+- Control access rights for all other users.
+- Control onboarding for staff and coach accounts.
+- Manage platform-level and club-level configuration.
 
 Cannot:
 
@@ -547,7 +612,13 @@ Cannot:
 
 Can:
 
-- Manage club settings, branding, rules, facilities, bookable resources, and pricing.
+- Manage club settings, branding, rules, facilities, and bookable resources within Super Admin pricing/payment boundaries.
+- Manage staff, coaches, and all member levels.
+- Edit member accounts.
+- Reserve spaces for events or under other users' names.
+- Manage payroll and view payments for all staff and coaches.
+- Manage coaching staff timetables.
+- Override coach and staff accounts.
 - Manage members, families, coaches, staff, memberships, bookings, programs, payments, and messages.
 - View club reporting.
 
@@ -555,11 +626,19 @@ Cannot:
 
 - Access other clubs.
 - Change Beeooking platform configuration.
+- Edit payment structure or core pricing. Only Super Admin can do that.
 
 ### Staff
 
 Can:
 
+- Make bookings on behalf of members and non-members.
+- Book coaching on behalf of customers.
+- Edit club member accounts.
+- Book ahead up to 12 months when front desk access allows it.
+- Review and send invoices for customers and payments.
+- Upgrade and manage payment and membership on behalf of customers.
+- Apply credits up to a Club Admin-defined limit when resolving customer issues.
 - Manage assigned operational workflows such as check-in, bookings, registrations, and member support.
 
 Cannot:
@@ -570,22 +649,32 @@ Cannot:
 
 Can:
 
+- View only payments owed to them for lessons, clinics, and related work.
+- Book their own lessons, clinics, and courts under their name.
+- View all member accounts without editing member information.
+- Review registers and add walk-ins to clinics or lessons, triggering payment from saved customer details where available.
+- Edit availability and connect diary/calendar integration.
+- Modify their public front-end coach profile.
 - View assigned programs, sessions, and participants.
-- Manage availability if permitted.
-- View relevant member contact and guardian information.
 
 Cannot:
 
 - View full club financials.
+- View other staff or coach payments.
+- Edit member account information.
 - Manage club-wide settings.
 
 ### Parent
 
 Can:
 
-- Manage own profile.
+- Manage own non-member profile.
 - Manage child profiles in their family.
-- Sign waivers for children.
+- Act on behalf of child accounts.
+- Receive all child notifications.
+- See child payment information.
+- Switch back to their own non-member account for personal bookings.
+- Sign family waivers.
 - Book, register, and pay for children.
 - Receive child-related communications.
 
@@ -598,12 +687,226 @@ Cannot:
 Can:
 
 - Manage own profile.
-- Book courts and eligible programs.
+- See all bookable areas.
+- Pay member rates, slated around 20% off.
+- Access gym barrier entry when included by membership.
+- Book courts, classes, health suite, and eligible programs when access rules and payment requirements are satisfied.
 - View own bookings, payments, and messages.
 
 Cannot:
 
 - Manage other users unless linked as guardian or billing owner.
+
+### Class Member
+
+Can:
+
+- Access all classes without per-class payment when added on top of base membership.
+- See racket bookings and pay member rates.
+
+### Rackets Member
+
+Can:
+
+- Access courts subject to club-set restrictions.
+- Hold up to 2 peak-time bookings when configured.
+- Book unlimited off-peak sessions when configured.
+- See other bookable spaces and pay member rates.
+
+### Health Member
+
+Can:
+
+- Access the recovery suite when included.
+- Receive heavily reduced massage pricing controlled by admin.
+- Book health and recovery services when available.
+
+### Non Member
+
+Can:
+
+- Manage account details.
+- See all bookable spaces.
+- Book and pay non-member rates.
+
+## Booking Rules
+
+Layer 0 booking rules are data-driven so each club can tune restrictions without code changes.
+
+### Default Booking Concepts
+
+- `peak_window`: Club-defined time ranges that count as peak bookings.
+- `off_peak_window`: All bookable time outside peak windows unless explicitly closed.
+- `advance_booking_days`: Number of days ahead a role or access level may book.
+- `cancellation_cutoff_hours`: Minimum notice needed to cancel without penalty.
+- `resource_conflict_rule`: One confirmed booking can occupy a bookable resource for the same time range.
+- `coach_conflict_rule`: One confirmed coaching booking can occupy a coach for the same time range.
+- `participant_conflict_rule`: A participant cannot hold overlapping confirmed bookings unless the booking type allows it.
+
+### Role Booking Rules
+
+- Super Admin and Club Admin can reserve spaces for events, maintenance, and bookings under other users' names.
+- Staff can book on behalf of members and non-members and can book up to 12 months ahead when their permission grants it.
+- Coach can book only their own lessons, clinics, and courts under their name.
+- Parent can book for children linked to their family and can book personally as a non-member.
+- Member can book according to membership access level and club rules.
+- Non Member can see all bookable spaces and book when payment at non-member rate is required.
+
+### Rackets Booking Rules
+
+- Rackets Member access may include up to 2 active peak-time court bookings.
+- Rackets Member access may include unlimited off-peak court bookings unless the club sets a different limit.
+- Base Member and Class Member can see racket bookings and pay member rates unless a rackets add-on includes the court booking.
+- Non Member can see racket bookings and pay non-member rates.
+
+### Conflict Strategy
+
+- The database stores every booking with `club_id`, `resource_type`, `resource_id`, `starts_at`, `ends_at`, and `status`.
+- Confirmed resource bookings must not overlap for the same club, resource type, and resource id.
+- Confirmed coach/session bookings must not overlap for the same coach unless the session capacity and program rules allow multiple participants.
+- Service code must re-check availability immediately before payment confirmation.
+- Waitlist entries are created when capacity is full or the selected time/resource is unavailable.
+
+## Membership Pricing Logic
+
+Pricing is calculated from the membership plan, participant status, add-ons, and booking target.
+
+### Rate Inputs
+
+- `access_level`: Base Member, Class Member, Rackets Member, Health Member, Parent, or Non Member.
+- `participation_status`: Active or non-active.
+- `pricing_role`: Active member, non-active member, spouse, junior, guest, or non-member.
+- `rate_modifiers`: Member discount, class inclusion, racket inclusion, health discount, or admin override.
+- `review_status`: Pending admin review, approved, rejected, or locked.
+
+### Rules
+
+- A family membership can have a non-active adult and an active child.
+- Active/non-active choices are selected by the member or parent during setup.
+- Club Admin reviews the selected participants and final membership type.
+- Once approved, membership type and participant active status are locked for self-service changes.
+- Monthly opt-in is self-service when payment succeeds.
+- Monthly opt-out requires contacting admin.
+- Member rates are planned around 20% off, but the exact percentage is club-controlled.
+- Class Member includes classes without per-class payment.
+- Rackets Member includes court access within club-set peak/off-peak limits.
+- Health Member includes recovery suite access and admin-controlled reduced massage/health pricing.
+- Non Member sees all bookable spaces and pays non-member rates.
+
+## Waiver Enforcement
+
+Waiver completion is a hard prerequisite for club activity.
+
+### Rules
+
+- One family waiver can cover every listed family member when the waiver text states the signer is responsible for all covered members.
+- The signer must be an adult guardian or billing owner linked to the family.
+- The signed waiver stores the waiver version and coverage scope.
+- If a new waiver version is issued, the family must sign the new version before restricted activity continues.
+- Individual waiver support remains available for clubs that choose individual coverage.
+
+### Blocked Until Waiver Complete
+
+- Booking courts, lanes, studios, rinks, tables, rooms, or health spaces.
+- Registering for clinics, camps, courses, classes, lessons, or events.
+- Joining waitlists.
+- Checking in for sessions.
+- Coach or staff adding a walk-in participant.
+
+### Allowed Before Waiver Complete
+
+- Account creation.
+- Family setup.
+- Dependent child creation.
+- Membership selection.
+- Payment setup when the club allows payment before activity.
+- Viewing waiver requirements and signing the waiver.
+
+## Seed Data
+
+Sprint 0 includes one sample club so the Layer 1 preview can be tested with realistic data.
+
+Sample club:
+
+- Club: Beeooking Demo Club.
+- Organization email domain: `beeooking.com`.
+- Activities: Squash, Tennis, Swimming, Fitness, Health/Recovery.
+- Resources: 4 squash courts, 3 tennis courts, 6 swimming lanes, 2 fitness studios, 3 recovery rooms.
+- Roles: One Super Admin, one Club Admin, one Staff user, one Coach, one Parent, one junior Member, one Non Member.
+- Membership plans: Base Member, Class Member, Rackets Member, Health Member, Non Member rate card.
+- Waiver: Family responsibility waiver covering all listed family members.
+- Booking rules: 2 active peak racket bookings for rackets members and staff booking horizon of 365 days.
+
+## Database Guardrails
+
+Layer 0 must include guardrails before product work accelerates.
+
+### Required Constraints
+
+- Every operational table includes `club_id`.
+- Family membership composition enforces one main member and one spousal member through service checks and database-supported participant metadata.
+- Additional family membership participants must be under 18 at approval time.
+- Waiver signatures must point to either one subject user or one covered family, never both.
+- Membership participant status locks after admin approval.
+- Booking `ends_at` must be after `starts_at`.
+- Payment and invoice provider ids are unique per club/provider where available.
+
+### Required Indexes
+
+- `club_id` indexes on every operational table.
+- Composite booking availability index on `club_id`, `resource_type`, `resource_id`, `starts_at`, `ends_at`.
+- Composite role lookup index on `club_id`, `user_id`, `role`.
+- Composite membership participant lookup on `club_id`, `membership_id`, `user_id`.
+- Waiver completion lookup on `club_id`, `waiver_id`, `covered_family_id` and `club_id`, `waiver_id`, `subject_user_id`.
+
+### Audit Logging
+
+Audit logs are required for:
+
+- Granting or removing Club Admin access.
+- Changing payment structure or core pricing.
+- Changing membership access level or participant active/non-active status after approval.
+- Applying credits.
+- Staff or Club Admin booking on behalf of another user.
+- Super Admin or Club Admin overriding staff or coach accounts.
+- User impersonation.
+
+## API Contract
+
+Layer 0 defines the first API routes before implementation.
+
+| Route | Method | Purpose | Required permission |
+| --- | --- | --- | --- |
+| `/api/clubs` | `POST` | Create a club. | `access_all_club_records` |
+| `/api/clubs/:clubId/setup/activities` | `PUT` | Save selected sports/resources. | Super Admin setup |
+| `/api/clubs/:clubId/setup/email-domain` | `PUT` | Save approved organization email domain. | Super Admin setup |
+| `/api/clubs/:clubId/invites` | `POST` | Invite staff, coach, admin, member, or parent. | Role-specific invite permission |
+| `/api/clubs/:clubId/roles` | `POST` | Assign a club role. | `manage_role_permissions`; `grant_club_admin` for Club Admin |
+| `/api/clubs/:clubId/families` | `POST` | Create a family group. | `edit_member_profile` or own family |
+| `/api/clubs/:clubId/families/:familyId/dependents` | `POST` | Add dependent child after adult account exists. | Own family or `edit_member_profile` |
+| `/api/clubs/:clubId/waivers/:waiverId/signatures` | `POST` | Sign individual or family waiver. | Own family signer |
+| `/api/clubs/:clubId/membership-plans` | `POST` | Create pricing/access plan. | `edit_core_pricing` |
+| `/api/clubs/:clubId/memberships` | `POST` | Start membership setup or self-service opt-in. | Own account/family or staff support |
+| `/api/clubs/:clubId/memberships/:membershipId/review` | `POST` | Admin approval of membership type and active/non-active statuses. | Club Admin |
+| `/api/clubs/:clubId/bookings` | `POST` | Create booking after waiver, access, pricing, and conflict checks. | Booking permission by role/access |
+| `/api/clubs/:clubId/credits` | `POST` | Apply customer credit. | `apply_credit` with limit |
+
+## Admin Onboarding Flow
+
+Super Admin setup happens before ordinary club operations.
+
+1. Create club profile: name, slug, timezone, brand settings.
+2. Choose supported activities from the sport/resource menu.
+3. Enter resource count for each selected activity.
+4. Create bookable resources from the selected activities.
+5. Choose the approved organization email domain.
+6. Configure first facility and operating timezone.
+7. Create first Club Admin using an email from the approved organization domain.
+8. Configure base booking rules: peak windows, advance booking windows, cancellation windows, and conflict settings.
+9. Configure membership plans and access levels.
+10. Publish required family waiver.
+11. Invite staff and coaches.
+12. Move club status from setup to active.
 
 ## Multi-Tenant Design
 

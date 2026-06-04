@@ -1,5 +1,8 @@
 -- Beeooking Layer 1 initial schema draft.
 -- Intended for Postgres/Supabase-style relational implementation.
+-- Engineering contract: outputs/layer-0-engineering-contract.md.
+-- Service layer must enforce the contract where a rule cannot safely be
+-- expressed as a portable relational constraint.
 
 create table clubs (
   id uuid primary key,
@@ -84,10 +87,16 @@ create table role_assignments (
   club_id uuid references clubs(id),
   user_id uuid not null references users(id),
   role text not null,
+  permissions jsonb not null default '{}'::jsonb,
   validation_metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   unique (club_id, user_id, role)
 );
+
+-- Contract note:
+-- Super Admin is represented by a role_assignment with null club_id.
+-- Staff-side roles must validate organization email domain before activation.
+-- Only Super Admin may grant club_admin or edit core pricing/payment structure.
 
 create table families (
   id uuid primary key,
@@ -159,11 +168,14 @@ create table membership_plans (
   id uuid primary key,
   club_id uuid not null references clubs(id),
   name text not null,
+  access_level text not null default 'base_member',
   billing_interval text not null,
   price_cents integer not null default 0,
   currency text not null default 'usd',
   eligibility_rules jsonb not null default '{}'::jsonb,
   pricing_rules jsonb not null default '{}'::jsonb,
+  access_rules jsonb not null default '{}'::jsonb,
+  rate_modifiers jsonb not null default '{}'::jsonb,
   self_service_opt_in boolean not null default true,
   admin_required_for_opt_out boolean not null default true,
   privileges jsonb not null default '{}'::jsonb,
@@ -208,6 +220,10 @@ create table membership_participants (
   updated_at timestamptz not null default now(),
   unique (club_id, membership_id, user_id)
 );
+
+-- Contract note:
+-- Service layer must enforce one main member, max one spousal member,
+-- under-18 dependent participants, and post-approval locking.
 
 create table billing_customers (
   id uuid primary key,
@@ -311,8 +327,15 @@ create table bookings (
   price_cents integer not null default 0,
   currency text not null default 'usd',
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  check (ends_at > starts_at)
 );
+
+-- Contract note:
+-- Service layer must enforce waiver completion, membership access, role booking
+-- horizon, peak booking limits, resource conflicts, coach conflicts, participant
+-- conflicts, payment requirements, and on-behalf audit logging before a booking
+-- becomes confirmed.
 
 create table waitlist_entries (
   id uuid primary key,
@@ -366,6 +389,20 @@ create table refunds (
   created_at timestamptz not null default now()
 );
 
+create table credit_adjustments (
+  id uuid primary key,
+  club_id uuid not null references clubs(id),
+  customer_user_id uuid not null references users(id),
+  applied_by_user_id uuid not null references users(id),
+  amount_cents integer not null,
+  currency text not null default 'usd',
+  reason text not null,
+  status text not null default 'applied',
+  permission_snapshot jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  check (amount_cents > 0)
+);
+
 create table messages (
   id uuid primary key,
   club_id uuid not null references clubs(id),
@@ -390,12 +427,34 @@ create table message_recipients (
   unique (club_id, message_id, recipient_user_id)
 );
 
+create table audit_logs (
+  id uuid primary key,
+  club_id uuid references clubs(id),
+  actor_user_id uuid references users(id),
+  subject_user_id uuid references users(id),
+  action text not null,
+  target_type text not null,
+  target_id uuid,
+  before_data jsonb,
+  after_data jsonb,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+-- Contract note:
+-- Audit actions are defined in outputs/layer-0-engineering-contract.md and must
+-- cover Club Admin grants, pricing/payment changes, credits, overrides,
+-- on-behalf bookings, post-lock membership changes, and impersonation.
+
 create index facilities_club_id_idx on facilities(club_id);
 create index club_activities_club_id_idx on club_activities(club_id);
 create index bookable_resources_club_id_idx on bookable_resources(club_id);
 create index club_users_club_id_idx on club_users(club_id);
 create index club_users_user_id_idx on club_users(user_id);
+create index role_assignments_club_user_role_idx on role_assignments(club_id, user_id, role);
 create index family_members_club_family_idx on family_members(club_id, family_id);
+create index waiver_signatures_family_idx on waiver_signatures(club_id, waiver_id, covered_family_id);
+create index waiver_signatures_subject_idx on waiver_signatures(club_id, waiver_id, subject_user_id);
 create index memberships_club_owner_idx on memberships(club_id, owner_type, owner_id);
 create index membership_participants_membership_idx on membership_participants(club_id, membership_id);
 create index membership_participants_user_idx on membership_participants(club_id, user_id, participation_status);
@@ -407,4 +466,7 @@ create index bookings_club_resource_time_idx on bookings(club_id, resource_type,
 create index bookings_participant_idx on bookings(club_id, participant_user_id);
 create index invoices_club_status_idx on invoices(club_id, status);
 create index payments_club_payer_idx on payments(club_id, payer_user_id);
+create index credit_adjustments_club_customer_idx on credit_adjustments(club_id, customer_user_id);
 create index messages_club_status_idx on messages(club_id, status);
+create index audit_logs_club_action_idx on audit_logs(club_id, action, created_at);
+create index audit_logs_actor_idx on audit_logs(actor_user_id, created_at);

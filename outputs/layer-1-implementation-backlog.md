@@ -10,9 +10,17 @@ Stories:
 - Define approved organization email domain setup for staff-side roles.
 - Define global users, club-scoped user access, and grouped member/family records.
 - Define role assignments for Super Admin, Club Admin, Staff, Coach, Parent, and Member.
+- Define detailed role permissions for Super Admin, Club Admin, Staff, Coach, Parent, Member, and Non Member access.
+- Define member access levels: Base Member, Class Member, Rackets Member, Health Member, Parent, and Non Member.
+- Define exact permission action keys for pricing, admin grants, credits, booking for others, payroll visibility, profile access, timetables, registers, and coach profile management.
 - Define club, facility, bookable resource, family, waiver, membership, booking, payment, and message entities.
 - Define tenant scoping rules for every club-owned object.
-- Define initial booking conflict rules.
+- Define peak/off-peak rules, booking horizons, cancellation windows, and initial booking conflict rules.
+- Define membership pricing logic for active/non-active participants, member/non-member rates, add-ons, and admin approval.
+- Define waiver enforcement rules and activity blocks when waiver is incomplete.
+- Define audit logging requirements for privileged actions and overrides.
+- Define Sprint 0 API contract for setup, families, waivers, memberships, bookings, roles, and credits.
+- Create Layer 0 engineering contract with permission keys, decision orders, API payloads, error codes, RLS expectations, audit events, and test cases.
 - Define Stripe object mapping for customers, subscriptions, payments, invoices, and refunds.
 - Create seed data for one sample club.
 
@@ -27,6 +35,19 @@ Acceptance criteria:
 - Club-scoped queries require `club_id`.
 - Super Admin access is explicitly separated from club roles.
 - Super Admin, Club Admin, Coach, and Staff role assignments require an email from the approved organization domain.
+- Only Super Admin can grant Club Admin access.
+- Only Super Admin can edit core pricing and payment structure.
+- Club Admin can manage staff, coaches, members, timetables, payroll visibility, event bookings, and operational overrides.
+- Staff can manage bookings, invoices, customer memberships/payments, and credits within Club Admin limits.
+- Coaches can view only their own payments and cannot edit member information.
+- Booking rules include role horizons, peak/off-peak rules, racket peak booking limits, waiver gating, and resource conflict checks.
+- Membership pricing supports active/non-active participants, member/non-member rates, add-ons, and admin locking after approval.
+- Waivers block bookings, waitlists, registrations, check-ins, and walk-ins until complete.
+- Audit logs are required for Club Admin grants, pricing/payment changes, credits, overrides, on-behalf bookings, and impersonation.
+- API contracts exist before Sprint 1 implementation begins.
+- API contracts include request examples, response shape, and error codes for required Layer 1 foundation flows.
+- Test contract covers permissions, booking, membership, waiver, and tenant isolation behavior.
+- Sample seed data exists for one demo club with sports, resources, roles, family, waiver, and membership plans.
 - Initial schema can support Sprint 1 without structural rework.
 
 ## Sprint 1: Foundation
@@ -38,6 +59,9 @@ Stories:
 - As a user, I can create an account and log in.
 - As a club admin, I can invite members, parents, coaches, staff, and admins.
 - As a club admin, I can assign club-specific roles.
+- As a club admin, I cannot grant Club Admin access or edit payment structure.
+- As staff, I can book on behalf of customers and apply credits within my configured limit.
+- As a coach, I can manage availability, registers, walk-ins, and public profile while viewing only my own payments.
 - As a parent, I can add and manage dependent child profiles after my adult account exists.
 - As a parent, I can sign one family waiver when the waiver states I am responsible for all listed family members.
 - As a member, I can manage my own profile.
@@ -75,6 +99,7 @@ Stories:
 Acceptance criteria:
 
 - Membership plans support pricing, billing interval, eligibility, and privileges.
+- Membership plans support Base, Class, Rackets, Health, Parent-linked, and Non Member rate/access rules.
 - Memberships can be owned by a user or family.
 - Family memberships enforce one main member, one spousal member, and additional members only when under 18.
 - Membership pricing is based on each participant's active or non-active status.
