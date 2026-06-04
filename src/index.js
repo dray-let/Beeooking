@@ -167,6 +167,39 @@ const layerOne = {
       ["Monthly opt-out request", "Member must contact admin to cancel", "Admin review"]
     ]
   },
+  adminDashboard: {
+    club: "Beeooking Demo Club",
+    activeClub: "Main Campus",
+    metrics: [
+      ["Members", "128", "94 active, 34 non-active"],
+      ["Families", "42", "7 pending review"],
+      ["Waivers", "86%", "6 families blocked"],
+      ["Resources", "20", "Courts and studios ready"]
+    ],
+    setupChecklist: [
+      ["Activity menu", "Complete", "Squash, tennis, pickleball, and fitness selected."],
+      ["Organization domain", "Complete", "staff@beeooking-demo.com enforced for staff-side roles."],
+      ["Family waiver", "Needs review", "Approve family-scoped waiver responsibility statement."],
+      ["Membership review", "In progress", "7 family memberships pending active/non-active approval."]
+    ],
+    actionQueue: [
+      ["High", "Approve Letourneau Family membership type", "Family Monthly"],
+      ["High", "Collect missing family waiver", "Letourneau Family"],
+      ["Medium", "Review monthly opt-out request", "Admin contact required"],
+      ["Medium", "Validate coach invite email domain", "coach@beeooking-demo.com"]
+    ],
+    resourceInventory: [
+      ["Squash", "6 courts", "Ready"],
+      ["Tennis", "4 courts", "Ready"],
+      ["Pickleball", "8 courts", "Needs hours"],
+      ["Fitness", "2 studios", "Ready"]
+    ],
+    staffDirectory: [
+      ["Alex Morgan", "Club Admin", "alex@beeooking-demo.com", "Domain ok"],
+      ["Priya Singh", "Coach", "priya@beeooking-demo.com", "Domain ok"],
+      ["Jordan Lee", "Staff", "jordan.personal@gmail.com", "Blocked"]
+    ]
+  },
   firstAdminScreens: [
     "Club context switcher",
     "Member directory",
@@ -431,6 +464,34 @@ function renderReviewQueueRows() {
           <th scope="row">${item}</th>
           <td>${reason}</td>
           <td><span class="status-chip">${action}</span></td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderDashboardMetrics() {
+  return layerOne.adminDashboard.metrics
+    .map(
+      ([label, value, detail]) => `
+        <article class="metric-tile">
+          <span>${label}</span>
+          <strong>${value}</strong>
+          <small>${detail}</small>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderDashboardRows(rows) {
+  return rows
+    .map(
+      ([name, status, detail]) => `
+        <tr>
+          <th scope="row">${name}</th>
+          <td><span class="status-chip ${status === "Blocked" || status === "High" || status === "Needs review" ? "is-warning" : ""}">${status}</span></td>
+          <td>${detail}</td>
         </tr>
       `
     )
@@ -1028,6 +1089,96 @@ function renderPage() {
           font-weight: 750;
         }
 
+        .admin-dashboard {
+          display: grid;
+          gap: 14px;
+        }
+
+        .dashboard-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 16px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--surface);
+        }
+
+        .dashboard-toolbar h2 {
+          margin: 0 0 4px;
+          font-size: 24px;
+          letter-spacing: 0;
+        }
+
+        .dashboard-toolbar p {
+          margin: 0;
+          color: var(--muted);
+        }
+
+        .dashboard-toolbar button {
+          min-height: 38px;
+          padding: 8px 12px;
+          border: 1px solid var(--accent);
+          border-radius: 8px;
+          background: var(--accent);
+          color: #ffffff;
+          font: inherit;
+          font-weight: 800;
+          cursor: pointer;
+        }
+
+        .metric-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .metric-tile {
+          min-height: 116px;
+          padding: 16px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #ffffff;
+        }
+
+        .metric-tile span,
+        .metric-tile small {
+          display: block;
+          color: var(--muted);
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        .metric-tile strong {
+          display: block;
+          margin: 8px 0 6px;
+          font-size: 32px;
+          line-height: 1;
+        }
+
+        .dashboard-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          gap: 14px;
+        }
+
+        .dashboard-panel {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--surface);
+          overflow: hidden;
+        }
+
+        .dashboard-panel h3 {
+          margin: 0;
+          padding: 14px 16px;
+          border-bottom: 1px solid var(--line);
+          background: #ffffff;
+          font-size: 18px;
+          letter-spacing: 0;
+        }
+
         footer {
           margin-top: 36px;
           padding-top: 24px;
@@ -1043,8 +1194,19 @@ function renderPage() {
           .rule-band,
           .member-workspace,
           .metric-row,
-          .activity-setup-grid {
+          .activity-setup-grid,
+          .metric-grid,
+          .dashboard-grid {
             grid-template-columns: 1fr;
+          }
+
+          .dashboard-toolbar {
+            display: block;
+          }
+
+          .dashboard-toolbar button {
+            margin-top: 12px;
+            width: 100%;
           }
 
           .section-heading {
@@ -1069,6 +1231,43 @@ function renderPage() {
             <p>Sprint 0 and Sprint 1: tenant model, club objects, roles, profiles, family accounts, waivers, and emergency contacts.</p>
           </aside>
         </header>
+
+        <section class="admin-dashboard" aria-labelledby="admin-dashboard-title">
+          <div class="dashboard-toolbar">
+            <div>
+              <h2 id="admin-dashboard-title">Club Admin Dashboard</h2>
+              <p>${layerOne.adminDashboard.club} · ${layerOne.adminDashboard.activeClub}</p>
+            </div>
+            <button type="button">Review Queue</button>
+          </div>
+          <div class="metric-grid">${renderDashboardMetrics()}</div>
+          <div class="dashboard-grid">
+            <article class="dashboard-panel" aria-labelledby="setup-checklist-title">
+              <h3 id="setup-checklist-title">Setup Checklist</h3>
+              <table>
+                <tbody>${renderDashboardRows(layerOne.adminDashboard.setupChecklist)}</tbody>
+              </table>
+            </article>
+            <article class="dashboard-panel" aria-labelledby="action-queue-title">
+              <h3 id="action-queue-title">Action Queue</h3>
+              <table>
+                <tbody>${renderDashboardRows(layerOne.adminDashboard.actionQueue)}</tbody>
+              </table>
+            </article>
+            <article class="dashboard-panel" aria-labelledby="resource-inventory-title">
+              <h3 id="resource-inventory-title">Bookable Resources</h3>
+              <table>
+                <tbody>${renderDashboardRows(layerOne.adminDashboard.resourceInventory)}</tbody>
+              </table>
+            </article>
+            <article class="dashboard-panel" aria-labelledby="staff-directory-title">
+              <h3 id="staff-directory-title">Staff Domain Validation</h3>
+              <table>
+                <tbody>${renderDashboardRows(layerOne.adminDashboard.staffDirectory)}</tbody>
+              </table>
+            </article>
+          </div>
+        </section>
 
         <section aria-labelledby="prototype-title">
           <div class="section-heading">
@@ -1331,6 +1530,7 @@ export default {
         familyMembershipRules: layerOne.familyMembershipRules,
         membershipPricingRules: layerOne.membershipPricingRules,
         workflowPrototype: layerOne.workflowPrototype,
+        adminDashboard: layerOne.adminDashboard,
         firstAdminScreens: layerOne.firstAdminScreens
       }, null, 2), {
         headers: {
