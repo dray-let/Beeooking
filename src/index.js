@@ -229,6 +229,118 @@ const layerOne = {
       ["Jordan Lee", "Staff", "jordan.personal@gmail.com", "Blocked"]
     ]
   },
+  operationsPrototype: {
+    roles: [
+      ["Super Admin", "Full setup and pricing control"],
+      ["Club Admin", "Club operations and membership review"],
+      ["Staff", "Front desk bookings and customer support"],
+      ["Coach", "Own sessions, registers, payments, and profile"],
+      ["Parent", "Child activity, waivers, and payments"],
+      ["Member", "Own bookings, access, and member rates"]
+    ],
+    views: [
+      ["setup", "Super Admin Setup"],
+      ["dashboard", "Club Admin Dashboard"],
+      ["families", "Members & Families"],
+      ["review", "Membership Review"],
+      ["waivers", "Waiver Status"],
+      ["resources", "Bookable Resources"],
+      ["booking", "Booking Preview"],
+      ["roles", "Role Preview"]
+    ],
+    setupWizard: [
+      ["1", "Club profile", "Beeooking Demo Club", "Timezone, brand, status, and tenant slug are ready."],
+      ["2", "Sports & resources", "5 activities", "Squash, tennis, swimming, fitness, and health/recovery are selected."],
+      ["3", "Counts", "18 resources", "4 squash courts, 3 tennis courts, 6 lanes, 2 studios, and 3 recovery rooms."],
+      ["4", "Email domain", "beeooking.com", "Staff-side roles must use the organization email domain."],
+      ["5", "First Club Admin", "clubadmin@beeooking.com", "Only Super Admin can grant this access."],
+      ["6", "Publish rules", "Ready", "Booking windows, membership access, waiver gate, and pricing rules are ready for review."]
+    ],
+    dashboardCards: [
+      ["Members", "128", "94 active, 34 non-active"],
+      ["Membership Review", "7", "Families needing approval"],
+      ["Waivers Blocked", "6", "Cannot book until signed"],
+      ["Bookings Today", "48", "11 staff-assisted"],
+      ["Revenue", "$8.4k", "Memberships, courts, classes"],
+      ["Coach Payouts", "$1.7k", "Visible to Club Admin only"]
+    ],
+    families: [
+      {
+        id: "letourneau-prototype",
+        name: "Letourneau Family",
+        status: "Needs waiver",
+        membership: "Family Monthly",
+        review: "Pending admin review",
+        payment: "Ready to pay",
+        action: "Approve after waiver",
+        people: [
+          ["Danielle Letourneau", "Main member", "Non-active", "Adult", "Billing owner"],
+          ["Avery Letourneau", "Dependent", "Active", "Junior", "Needs waiver"],
+          ["Maya Letourneau", "Dependent", "Active", "Junior", "Needs waiver"]
+        ]
+      },
+      {
+        id: "chen-prototype",
+        name: "Chen Family",
+        status: "Ready",
+        membership: "Family Annual + Rackets",
+        review: "Approved and locked",
+        payment: "Paid",
+        action: "Admin change only",
+        people: [
+          ["Grace Chen", "Main member", "Active", "Adult", "Covered"],
+          ["Leo Chen", "Spousal member", "Non-active", "Adult", "Covered"],
+          ["Nina Chen", "Dependent", "Active", "Junior", "Covered"]
+        ]
+      },
+      {
+        id: "rivera-prototype",
+        name: "Rivera Member",
+        status: "Payment due",
+        membership: "Monthly Adult",
+        review: "Draft setup",
+        payment: "Awaiting payment",
+        action: "Self-service opt-in",
+        people: [
+          ["Sam Rivera", "Main member", "Active", "Adult", "Needs waiver"]
+        ]
+      }
+    ],
+    reviewQueue: [
+      ["Letourneau Family", "Family Monthly", "Adult non-active, children active", "Approve after waiver"],
+      ["Rivera Member", "Monthly Adult", "Payment required for opt-in", "Await payment"],
+      ["Chen Family", "Family Annual + Rackets", "Approved and locked", "No self-service changes"],
+      ["Opt-out request", "Monthly Adult", "Cancel request requires admin contact", "Review"]
+    ],
+    waiverQueue: [
+      ["Letourneau Family", "Family waiver missing", "3 covered members needed", "Blocked"],
+      ["Rivera Member", "Individual waiver missing", "1 member needed", "Blocked"],
+      ["Chen Family", "Family waiver complete", "v1 signed by Grace Chen", "Clear"],
+      ["Coach walk-in", "Waiver check required", "Cannot add participant until covered", "Guarded"]
+    ],
+    resources: [
+      ["Squash", "Court", "4", "Rackets members: 2 peak bookings max"],
+      ["Tennis", "Court", "3", "Member/non-member rates apply"],
+      ["Swimming", "Lane", "6", "Lane booking enabled"],
+      ["Fitness", "Studio", "2", "Class Member access included"],
+      ["Health/Recovery", "Room", "3", "Health Member recovery included"]
+    ],
+    bookingScenarios: [
+      ["Parent books child squash court", "Blocked", "Family waiver missing before booking."],
+      ["Rackets member books 3rd peak court", "Blocked", "Peak booking limit is 2 active peak bookings."],
+      ["Rackets member books off-peak court", "Allowed", "Off-peak booking allowed when resource is available."],
+      ["Class Member books class", "Included", "Class access is included without per-class payment."],
+      ["Non Member books tennis court", "Payment required", "Visible to non-members, charged at non-member rate."]
+    ],
+    rolePreview: [
+      ["Super Admin", "Can grant Club Admin, edit pricing/payment structure, complete setup, and access all areas."],
+      ["Club Admin", "Can manage members, staff, coaches, payroll visibility, timetables, event bookings, and overrides; cannot edit core pricing."],
+      ["Staff", "Can book for customers, send invoices, manage customer memberships, and apply credits within limits."],
+      ["Coach", "Can view member accounts without editing, manage own availability/registers/walk-ins, and see own payments only."],
+      ["Parent", "Can manage children, sign family waiver, see child payments, and use personal non-member account."],
+      ["Member", "Can see bookable spaces, pay member rates, and use access allowed by membership/add-ons."]
+    ]
+  },
   firstAdminScreens: [
     "Club context switcher",
     "Member directory",
@@ -572,6 +684,255 @@ function renderDashboardRows(rows) {
       `
     )
     .join("");
+}
+
+function renderRoleSwitcher() {
+  return layerOne.operationsPrototype.roles
+    .map(
+      ([role, description], index) => `
+        <button class="role-switch${index === 0 ? " is-active" : ""}" type="button" data-role-view="${role}">
+          <strong>${role}</strong>
+          <small>${description}</small>
+        </button>
+      `
+    )
+    .join("");
+}
+
+function renderPrototypeNav() {
+  return layerOne.operationsPrototype.views
+    .map(
+      ([view, label], index) => `
+        <button class="${index === 0 ? "is-active" : ""}" type="button" data-ops-tab="${view}">${label}</button>
+      `
+    )
+    .join("");
+}
+
+function renderSetupWizardCards() {
+  return layerOne.operationsPrototype.setupWizard
+    .map(
+      ([step, title, value, body]) => `
+        <article class="ops-step">
+          <span>${step}</span>
+          <h3>${title}</h3>
+          <strong>${value}</strong>
+          <p>${body}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderOpsDashboardCards() {
+  return layerOne.operationsPrototype.dashboardCards
+    .map(
+      ([label, value, detail]) => `
+        <article class="ops-stat">
+          <span>${label}</span>
+          <strong>${value}</strong>
+          <small>${detail}</small>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderOpsFamilyButtons() {
+  return layerOne.operationsPrototype.families
+    .map(
+      (family, index) => `
+        <button class="ops-family-card${index === 0 ? " is-selected" : ""}" type="button" data-ops-family="${family.id}">
+          <strong>${family.name}</strong>
+          <span>${family.membership}</span>
+          <em>${family.status}</em>
+        </button>
+      `
+    )
+    .join("");
+}
+
+function renderOpsFamilyPanels() {
+  return layerOne.operationsPrototype.families
+    .map(
+      (family, index) => `
+        <article class="ops-family-panel${index === 0 ? " is-active" : ""}" data-ops-family-panel="${family.id}">
+          <div class="ops-panel-header">
+            <div>
+              <h3>${family.name}</h3>
+              <p>${family.review}</p>
+            </div>
+            <span class="status-chip ${family.status === "Ready" ? "" : "is-warning"}">${family.status}</span>
+          </div>
+          <div class="ops-mini-grid">
+            <span><strong>${family.membership}</strong><small>Membership</small></span>
+            <span><strong>${family.payment}</strong><small>Payment</small></span>
+            <span><strong>${family.action}</strong><small>Next action</small></span>
+          </div>
+          <div class="table-wrap is-embedded">
+            <table>
+              <tbody>${family.people
+                .map(
+                  ([name, role, participation, age, status]) => `
+                    <tr>
+                      <th scope="row">${name}<small>${role}</small></th>
+                      <td>${participation}</td>
+                      <td>${age}</td>
+                      <td><span class="status-chip ${status.includes("Needs") ? "is-warning" : ""}">${status}</span></td>
+                    </tr>
+                  `
+                )
+                .join("")}</tbody>
+            </table>
+          </div>
+          <div class="action-row">
+            <button type="button">Open family</button>
+            <button type="button" class="secondary-action">Send waiver</button>
+            <button type="button" class="secondary-action">Review membership</button>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderOpsRows(rows) {
+  return rows
+    .map(
+      ([name, type, detail, status]) => `
+        <tr>
+          <th scope="row">${name}</th>
+          <td>${type}</td>
+          <td>${detail}</td>
+          <td><span class="status-chip ${["Blocked", "Payment required", "Approve after waiver", "Review"].includes(status) ? "is-warning" : ""}">${status}</span></td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderRolePreviewRows() {
+  return layerOne.operationsPrototype.rolePreview
+    .map(
+      ([role, body]) => `
+        <tr data-role-row="${role}">
+          <th scope="row">${role}</th>
+          <td>${body}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderOperationsPrototype() {
+  return `
+    <section class="ops-prototype" aria-labelledby="operations-prototype-title">
+      <div class="ops-header">
+        <div>
+          <span class="label">Clickable Prototype</span>
+          <h2 id="operations-prototype-title">Layer 1 Operations Prototype</h2>
+          <p>Switch roles and move through the operating views Beeooking needs before real database, auth, payment, and booking logic are connected.</p>
+        </div>
+        <div class="ops-current-role">
+          <small>Viewing as</small>
+          <strong data-current-role-label>Super Admin</strong>
+        </div>
+      </div>
+
+      <div class="role-switcher" aria-label="Role preview selector">${renderRoleSwitcher()}</div>
+
+      <div class="ops-shell">
+        <nav class="ops-nav" aria-label="Layer 1 prototype views">${renderPrototypeNav()}</nav>
+
+        <div class="ops-view is-active" data-ops-panel="setup">
+          <div class="ops-view-heading">
+            <h3>Super Admin Setup</h3>
+            <p>Create the club, choose resources, set email domain, assign first Club Admin, and publish core rules.</p>
+          </div>
+          <div class="ops-step-grid">${renderSetupWizardCards()}</div>
+        </div>
+
+        <div class="ops-view" data-ops-panel="dashboard">
+          <div class="ops-view-heading">
+            <h3>Club Admin Dashboard</h3>
+            <p>Operational pulse for memberships, waivers, booking activity, revenue, and coach payouts.</p>
+          </div>
+          <div class="ops-stat-grid">${renderOpsDashboardCards()}</div>
+        </div>
+
+        <div class="ops-view" data-ops-panel="families">
+          <div class="ops-view-heading">
+            <h3>Members & Families</h3>
+            <p>Families, dependents, active/non-active status, waiver coverage, and payment readiness live together.</p>
+          </div>
+          <div class="ops-family-layout">
+            <div class="ops-family-list">${renderOpsFamilyButtons()}</div>
+            <div>${renderOpsFamilyPanels()}</div>
+          </div>
+        </div>
+
+        <div class="ops-view" data-ops-panel="review">
+          <div class="ops-view-heading">
+            <h3>Membership Review</h3>
+            <p>Club Admin reviews selected family structure, active/non-active pricing, opt-in payment, and post-approval lock state.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderOpsRows(layerOne.operationsPrototype.reviewQueue)}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ops-view" data-ops-panel="waivers">
+          <div class="ops-view-heading">
+            <h3>Waiver Status</h3>
+            <p>Missing waivers block bookings, registrations, waitlists, check-ins, and walk-ins until covered.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderOpsRows(layerOne.operationsPrototype.waiverQueue)}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ops-view" data-ops-panel="resources">
+          <div class="ops-view-heading">
+            <h3>Bookable Resources</h3>
+            <p>Selected sports become bookable inventory with adjusted units and access rules.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderOpsRows(layerOne.operationsPrototype.resources)}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ops-view" data-ops-panel="booking">
+          <div class="ops-view-heading">
+            <h3>Booking Preview</h3>
+            <p>Prototype booking outcomes show the rule engine before the real booking engine is wired.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderOpsRows(layerOne.operationsPrototype.bookingScenarios)}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ops-view" data-ops-panel="roles">
+          <div class="ops-view-heading">
+            <h3>Role Preview</h3>
+            <p>Use the role switcher to highlight the access model for each user type.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>${renderRolePreviewRows()}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
 }
 
 function renderPage() {
@@ -1153,6 +1514,317 @@ function renderPage() {
           font-weight: 700;
         }
 
+        .ops-prototype {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--surface);
+          overflow: hidden;
+        }
+
+        .ops-header {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 190px;
+          gap: 16px;
+          align-items: end;
+          padding: 18px;
+          border-bottom: 1px solid var(--line);
+          background: #ffffff;
+        }
+
+        .ops-header h2 {
+          margin: 0;
+          font-size: 28px;
+          letter-spacing: 0;
+        }
+
+        .ops-header p,
+        .ops-view-heading p {
+          max-width: 720px;
+          margin: 8px 0 0;
+          color: var(--muted);
+          line-height: 1.5;
+        }
+
+        .ops-current-role {
+          min-height: 74px;
+          padding: 14px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: var(--surface);
+        }
+
+        .ops-current-role small,
+        .ops-current-role strong {
+          display: block;
+        }
+
+        .ops-current-role small {
+          color: var(--muted);
+          font-weight: 750;
+        }
+
+        .ops-current-role strong {
+          margin-top: 6px;
+          font-size: 18px;
+        }
+
+        .role-switcher,
+        .ops-nav {
+          display: flex;
+          gap: 8px;
+          padding: 12px;
+          overflow-x: auto;
+          border-bottom: 1px solid var(--line);
+          background: #ffffff;
+        }
+
+        .role-switch,
+        .ops-nav button {
+          flex: none;
+          min-height: 42px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #ffffff;
+          color: var(--ink);
+          font: inherit;
+          cursor: pointer;
+        }
+
+        .role-switch {
+          width: 180px;
+          padding: 10px;
+          text-align: left;
+        }
+
+        .role-switch strong,
+        .role-switch small {
+          display: block;
+        }
+
+        .role-switch small {
+          margin-top: 4px;
+          color: var(--muted);
+          font-size: 12px;
+          line-height: 1.35;
+        }
+
+        .role-switch.is-active,
+        .ops-nav button.is-active {
+          border-color: var(--accent);
+          background: #dff6f1;
+          color: var(--accent-strong);
+        }
+
+        .ops-shell {
+          background: var(--surface);
+        }
+
+        .ops-nav {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+        }
+
+        .ops-nav button {
+          padding: 9px 12px;
+          font-weight: 800;
+        }
+
+        .ops-view {
+          display: none;
+          padding: 18px;
+        }
+
+        .ops-view.is-active {
+          display: block;
+        }
+
+        .ops-view-heading {
+          margin-bottom: 14px;
+        }
+
+        .ops-view-heading h3 {
+          margin: 0;
+          font-size: 22px;
+          letter-spacing: 0;
+        }
+
+        .ops-step-grid,
+        .ops-stat-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .ops-step,
+        .ops-stat,
+        .ops-family-card {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #ffffff;
+        }
+
+        .ops-step {
+          min-height: 168px;
+          padding: 16px;
+        }
+
+        .ops-step span {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 999px;
+          background: var(--accent);
+          color: #ffffff;
+          font-weight: 850;
+        }
+
+        .ops-step h3 {
+          margin: 14px 0 4px;
+          font-size: 17px;
+        }
+
+        .ops-step strong,
+        .ops-stat strong {
+          display: block;
+          font-size: 24px;
+        }
+
+        .ops-step p,
+        .ops-stat small {
+          display: block;
+          margin-top: 7px;
+          color: var(--muted);
+          line-height: 1.45;
+        }
+
+        .ops-stat {
+          min-height: 116px;
+          padding: 16px;
+        }
+
+        .ops-stat span {
+          display: block;
+          color: var(--muted);
+          font-size: 13px;
+          font-weight: 800;
+        }
+
+        .ops-stat strong {
+          margin-top: 8px;
+          font-size: 30px;
+          line-height: 1;
+        }
+
+        .ops-family-layout {
+          display: grid;
+          grid-template-columns: 260px minmax(0, 1fr);
+          gap: 14px;
+        }
+
+        .ops-family-list {
+          display: grid;
+          gap: 8px;
+          align-content: start;
+        }
+
+        .ops-family-card {
+          width: 100%;
+          min-height: 96px;
+          padding: 13px;
+          text-align: left;
+          font: inherit;
+          cursor: pointer;
+        }
+
+        .ops-family-card strong,
+        .ops-family-card span,
+        .ops-family-card em {
+          display: block;
+        }
+
+        .ops-family-card span {
+          margin-top: 4px;
+          color: var(--muted);
+          font-size: 13px;
+        }
+
+        .ops-family-card em {
+          margin-top: 8px;
+          color: var(--accent-strong);
+          font-size: 12px;
+          font-style: normal;
+          font-weight: 800;
+        }
+
+        .ops-family-card.is-selected {
+          border-color: var(--accent);
+          background: #dff6f1;
+        }
+
+        .ops-family-panel {
+          display: none;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #ffffff;
+          overflow: hidden;
+        }
+
+        .ops-family-panel.is-active {
+          display: block;
+        }
+
+        .ops-panel-header {
+          display: flex;
+          align-items: start;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 16px;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .ops-panel-header h3 {
+          margin: 0 0 4px;
+          font-size: 20px;
+        }
+
+        .ops-panel-header p {
+          margin: 0;
+          color: var(--muted);
+        }
+
+        .ops-mini-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 1px;
+          background: var(--line);
+        }
+
+        .ops-mini-grid span {
+          min-height: 76px;
+          padding: 14px 16px;
+          background: #ffffff;
+        }
+
+        .ops-mini-grid strong,
+        .ops-mini-grid small {
+          display: block;
+        }
+
+        .ops-mini-grid small {
+          margin-top: 4px;
+          color: var(--muted);
+          font-size: 12px;
+          font-weight: 750;
+        }
+
+        tr.is-role-highlight th,
+        tr.is-role-highlight td {
+          background: #dff6f1;
+        }
+
         .count-input {
           display: flex;
           align-items: center;
@@ -1275,15 +1947,24 @@ function renderPage() {
 
         @media (max-width: 760px) {
           header,
+          .ops-header,
           .timeline-row,
           .split-grid,
           .rule-band,
           .member-workspace,
           .metric-row,
+          .ops-step-grid,
+          .ops-stat-grid,
+          .ops-family-layout,
+          .ops-mini-grid,
           .activity-setup-grid,
           .metric-grid,
           .dashboard-grid {
             grid-template-columns: 1fr;
+          }
+
+          .role-switch {
+            width: 160px;
           }
 
           .dashboard-toolbar {
@@ -1317,6 +1998,8 @@ function renderPage() {
             <p>Sprint 0 is now finished as the foundation spec. Sprint 1 can build profiles, family accounts, waivers, and emergency contacts from it.</p>
           </aside>
         </header>
+
+        ${renderOperationsPrototype()}
 
         <section aria-labelledby="layer-zero-title">
           <div class="section-heading">
@@ -1577,6 +2260,40 @@ function renderPage() {
         </footer>
       </main>
       <script>
+        const opsTabs = document.querySelectorAll("[data-ops-tab]");
+        const opsPanels = document.querySelectorAll("[data-ops-panel]");
+        opsTabs.forEach((button) => {
+          button.addEventListener("click", () => {
+            const view = button.dataset.opsTab;
+            opsTabs.forEach((item) => item.classList.toggle("is-active", item === button));
+            opsPanels.forEach((panel) => panel.classList.toggle("is-active", panel.dataset.opsPanel === view));
+          });
+        });
+
+        const opsFamilyButtons = document.querySelectorAll("[data-ops-family]");
+        const opsFamilyPanels = document.querySelectorAll("[data-ops-family-panel]");
+        opsFamilyButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const familyId = button.dataset.opsFamily;
+            opsFamilyButtons.forEach((item) => item.classList.toggle("is-selected", item === button));
+            opsFamilyPanels.forEach((panel) => panel.classList.toggle("is-active", panel.dataset.opsFamilyPanel === familyId));
+          });
+        });
+
+        const roleSwitches = document.querySelectorAll("[data-role-view]");
+        const currentRoleLabel = document.querySelector("[data-current-role-label]");
+        const roleRows = document.querySelectorAll("[data-role-row]");
+        roleSwitches.forEach((button) => {
+          button.addEventListener("click", () => {
+            const role = button.dataset.roleView;
+            roleSwitches.forEach((item) => item.classList.toggle("is-active", item === button));
+            if (currentRoleLabel) currentRoleLabel.textContent = role;
+            roleRows.forEach((row) => row.classList.toggle("is-role-highlight", row.dataset.roleRow === role));
+            const roleTab = document.querySelector("[data-ops-tab='roles']");
+            if (roleTab) roleTab.click();
+          });
+        });
+
         const tabButtons = document.querySelectorAll("[data-prototype-tab]");
         const tabPanels = document.querySelectorAll("[data-prototype-panel]");
         tabButtons.forEach((button) => {
@@ -1688,6 +2405,7 @@ export default {
         profileRules: layerOne.profileRules,
         familyMembershipRules: layerOne.familyMembershipRules,
         membershipPricingRules: layerOne.membershipPricingRules,
+        operationsPrototype: layerOne.operationsPrototype,
         workflowPrototype: layerOne.workflowPrototype,
         adminDashboard: layerOne.adminDashboard,
         firstAdminScreens: layerOne.firstAdminScreens
