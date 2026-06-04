@@ -1,3 +1,5 @@
+import { handleAppApi, renderAppShell } from "./app.js";
+
 const layerOne = {
   name: "Layer 1: Club Operating System",
   objective:
@@ -1011,6 +1013,14 @@ function renderPage() {
           line-height: 1.5;
         }
 
+        .status-panel a {
+          display: inline-flex;
+          margin-top: 12px;
+          color: var(--accent-strong);
+          font-weight: 800;
+          text-decoration: none;
+        }
+
         .label {
           display: inline-flex;
           margin-bottom: 12px;
@@ -1996,6 +2006,7 @@ function renderPage() {
           <aside class="status-panel" aria-label="Current build focus">
             <span class="label">Build Focus</span>
             <p>Sprint 0 is now finished as the foundation spec. Sprint 1 can build profiles, family accounts, waivers, and emergency contacts from it.</p>
+            <a href="/app">Open real app foundation</a>
           </aside>
         </header>
 
@@ -2381,8 +2392,20 @@ function renderPage() {
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/app") {
+      return new Response(renderAppShell(), {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8"
+        }
+      });
+    }
+
+    if (url.pathname.startsWith("/api/app") || url.pathname.startsWith("/api/auth") || url.pathname.startsWith("/api/clubs")) {
+      return handleAppApi(request, env);
+    }
 
     if (url.pathname === "/api/layer-1") {
       return new Response(JSON.stringify(layerOne, null, 2), {
