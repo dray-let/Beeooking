@@ -58,6 +58,13 @@ create table if not exists role_assignments (
   unique (club_id, user_id, role)
 );
 
+create table if not exists user_sessions (
+  id text primary key,
+  user_id text not null references users(id),
+  created_at text not null default current_timestamp,
+  expires_at text not null
+);
+
 create table if not exists families (
   id text primary key,
   club_id text not null references clubs(id),
@@ -147,6 +154,7 @@ create index if not exists club_activities_club_idx on club_activities(club_id);
 create index if not exists club_users_club_idx on club_users(club_id);
 create index if not exists club_users_user_idx on club_users(user_id);
 create index if not exists role_assignments_club_user_role_idx on role_assignments(club_id, user_id, role);
+create index if not exists user_sessions_user_idx on user_sessions(user_id, expires_at);
 create index if not exists families_club_idx on families(club_id);
 create index if not exists family_members_club_family_idx on family_members(club_id, family_id);
 create index if not exists waiver_signatures_family_idx on waiver_signatures(club_id, waiver_id, covered_family_id);

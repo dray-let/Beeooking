@@ -72,6 +72,7 @@ const initialState = {
 };
 
 let memoryState = structuredClone(initialState);
+const memorySessions = new Map();
 
 function hasD1(env) {
   return Boolean(env?.DB);
@@ -153,6 +154,15 @@ function mapSignature(row) {
   };
 }
 
+function mapUserSession(row) {
+  return {
+    id: row.id,
+    name: `${row.first_name} ${row.last_name}`,
+    email: row.email,
+    role: row.role || "member"
+  };
+}
+
 async function all(db, sql, ...bindings) {
   const result = await db.prepare(sql).bind(...bindings).all();
   return result.results || [];
@@ -228,6 +238,20 @@ async function writeD1State(db, state) {
         "on conflict(id) do update set email = excluded.email, first_name = excluded.first_name, last_name = excluded.last_name, updated_at = current_timestamp"
       )
       .bind(user.id, user.email, firstName, lastName, user.id === "user_member" ? "1995-01-01" : "1985-01-01")
+      .run();
+    await db
+      .prepare(
+        "insert into role_assignments (id, club_id, user_id, role, permissions, validation_metadata) values (?, ?, ?, ?, ?, ?) " +
+          "on conflict(club_id, user_id, role) do update set permissions = excluded.permissions, validation_metadata = excluded.validation_metadata"
+      )
+      .bind(
+        `role_${user.id}_${user.role}`,
+        user.role === "super_admin" ? null : "club_demo",
+        user.id,
+        user.role,
+        JSON.stringify({ demo: true }),
+        JSON.stringify({ seeded: true })
+      )
       .run();
   }
 
@@ -368,9 +392,115 @@ function readCookie(request, name) {
   return part ? decodeURIComponent(part.slice(name.length + 1)) : "";
 }
 
-function currentUser(request) {
+async function currentUser(request, env) {
+  const sessionId = readCookie(request, "beeooking_session");
+  if (sessionId && memorySessions.has(sessionId)) {
+    return memorySessions.get(sessionId);
+  }
+  if (sessionId && hasD1(env)) {
+    try {
+      const row = await first(
+        env.DB,
+        "select u.id, u.email, u.first_name, u.last_name, coalesce(ra.role, 'member') as role " +
+          "from user_sessions s " +
+          "join users u on u.id = s.user_id " +
+          "left join role_assignments ra on ra.user_id = u.id and (ra.club_id = ? or ra.club_id is null) " +
+          "where s.id = ? and s.expires_at > current_timestamp " +
+          "order by case ra.role when 'super_admin' then 1 when 'club_admin' then 2 when 'staff' then 3 when 'coach' then 4 when 'parent' then 5 else 6 end " +
+          "limit 1",
+        "club_demo",
+        sessionId
+      );
+      if (row) return mapUserSession(row);
+    } catch {
+      // Fall through to demo cookie fallback.
+    }
+  }
   const id = readCookie(request, "beeooking_user") || "user_super";
   return demoUsers.find((user) => user.id === id) || demoUsers[0];
+}
+
+async function createSession(user, env) {
+  const sessionId = newId("session");
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString();
+  memorySessions.set(sessionId, user);
+  if (hasD1(env)) {
+    try {
+      await env.DB
+        .prepare("insert into user_sessions (id, user_id, expires_at) values (?, ?, ?)")
+        .bind(sessionId, user.id, expiresAt)
+        .run();
+    } catch {
+      // Missing migrations should not block local/fallback auth.
+    }
+  }
+  return {
+    sessionId,
+    cookie: `beeooking_session=${encodeURIComponent(sessionId)}; Path=/; SameSite=Lax; Max-Age=2592000`
+  };
+}
+
+async function findOrCreateLoginUser(email, env) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const demoUser = demoUsers.find((user) => user.email.toLowerCase() === normalizedEmail);
+  if (demoUser) return demoUser;
+  if (hasD1(env)) {
+    const existing = await first(env.DB, "select id, email, first_name, last_name from users where lower(email) = ? limit 1", normalizedEmail);
+    if (existing) {
+      return {
+        id: existing.id,
+        name: `${existing.first_name} ${existing.last_name}`,
+        email: existing.email,
+        role: "member"
+      };
+    }
+    const user = {
+      id: newId("user"),
+      name: normalizedEmail.split("@")[0] || "New Member",
+      email: normalizedEmail,
+      role: "member"
+    };
+    const { firstName, lastName } = userNameParts(user);
+    await env.DB
+      .prepare("insert into users (id, email, first_name, last_name, date_of_birth) values (?, ?, ?, ?, ?)")
+      .bind(user.id, user.email, firstName, lastName, "1990-01-01")
+      .run();
+    await env.DB
+      .prepare("insert into role_assignments (id, club_id, user_id, role, validation_metadata) values (?, ?, ?, ?, ?)")
+      .bind(newId("role"), "club_demo", user.id, "member", JSON.stringify({ source: "email_login" }))
+      .run();
+    return user;
+  }
+  return {
+    id: newId("user"),
+    name: normalizedEmail.split("@")[0] || "New Member",
+    email: normalizedEmail,
+    role: "member"
+  };
+}
+
+async function createInvitedUser(email, role, env) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const demoUser = demoUsers.find((user) => user.email.toLowerCase() === normalizedEmail);
+  if (demoUser) return { ...demoUser, role };
+  const user = {
+    id: newId("user"),
+    name: normalizedEmail.split("@")[0] || "Invited User",
+    email: normalizedEmail,
+    role
+  };
+  if (hasD1(env)) {
+    const existing = await first(env.DB, "select id, email, first_name, last_name from users where lower(email) = ? limit 1", normalizedEmail);
+    if (existing) {
+      return { id: existing.id, name: `${existing.first_name} ${existing.last_name}`, email: existing.email, role };
+    }
+    const { firstName, lastName } = userNameParts(user);
+    await env.DB
+      .prepare("insert into users (id, email, first_name, last_name, date_of_birth) values (?, ?, ?, ?, ?)")
+      .bind(user.id, user.email, firstName, lastName, "1990-01-01")
+      .run();
+  }
+  return user;
 }
 
 function parseBody(request) {
@@ -389,6 +519,19 @@ function isAdult(dateOfBirth) {
 
 function canManageClubSetup(user) {
   return user.role === "super_admin";
+}
+
+function canInviteRole(user, role) {
+  if (role === "club_admin") return user.role === "super_admin";
+  return ["super_admin", "club_admin"].includes(user.role);
+}
+
+function roleRequiresOrgEmail(role) {
+  return ["super_admin", "club_admin", "staff", "coach"].includes(role);
+}
+
+function emailMatchesDomain(email, domain) {
+  return Boolean(email && domain && email.toLowerCase().endsWith(`@${domain.toLowerCase()}`));
 }
 
 function canManageFamilies(user) {
@@ -457,7 +600,7 @@ export async function handleAppApi(request, env = {}) {
   await loadState(env);
   const url = new URL(request.url);
   const parts = routeParts(url.pathname);
-  const user = currentUser(request);
+  const user = await currentUser(request, env);
 
   async function saved(data, init) {
     await persistState(env);
@@ -471,11 +614,29 @@ export async function handleAppApi(request, env = {}) {
   if (url.pathname === "/api/auth/demo-login" && request.method === "POST") {
     const body = await parseBody(request);
     const selected = demoUsers.find((item) => item.id === body.userId) || demoUsers[0];
+    const session = await createSession(selected, env);
     return json(
       { data: { user: selected } },
       {
         headers: {
-          "Set-Cookie": `beeooking_user=${encodeURIComponent(selected.id)}; Path=/; SameSite=Lax; Max-Age=2592000`
+          "Set-Cookie": session.cookie
+        }
+      }
+    );
+  }
+
+  if (url.pathname === "/api/auth/login" && request.method === "POST") {
+    const body = await parseBody(request);
+    if (!body.email) {
+      return json({ error: { code: "email_required", message: "Email is required." } }, { status: 400 });
+    }
+    const selected = await findOrCreateLoginUser(body.email, env);
+    const session = await createSession(selected, env);
+    return json(
+      { data: { user: selected } },
+      {
+        headers: {
+          "Set-Cookie": session.cookie
         }
       }
     );
@@ -516,6 +677,48 @@ export async function handleAppApi(request, env = {}) {
     club.activities = Array.isArray(body.activities) ? body.activities : club.activities;
     club.setupStatus = body.setupStatus || "ready_for_admin";
     return saved({ data: club });
+  }
+
+  if (parts[0] === "api" && parts[1] === "clubs" && parts[3] === "invites" && request.method === "POST") {
+    const club = memoryState.clubs.find((item) => item.id === parts[2]);
+    if (!club) return json({ error: { code: "not_found", message: "Club not found." } }, { status: 404 });
+    const body = await parseBody(request);
+    const role = body.role || "member";
+    if (!canInviteRole(user, role)) {
+      return json({ error: { code: "permission_denied", message: "You cannot invite this role." } }, { status: 403 });
+    }
+    if (roleRequiresOrgEmail(role) && !emailMatchesDomain(body.email, club.organizationEmailDomain)) {
+      return json(
+        {
+          error: {
+            code: "organization_email_required",
+            message: `The ${role} role requires an email ending in @${club.organizationEmailDomain}.`
+          }
+        },
+        { status: 409 }
+      );
+    }
+    const invitedUser = await createInvitedUser(body.email, role, env);
+    if (hasD1(env)) {
+      await env.DB
+        .prepare("insert into role_assignments (id, club_id, user_id, role, validation_metadata) values (?, ?, ?, ?, ?)")
+        .bind(
+          newId("role"),
+          role === "super_admin" ? null : club.id,
+          invitedUser.id,
+          role,
+          JSON.stringify({ invitedBy: user.id, domain: club.organizationEmailDomain, passed: true })
+        )
+        .run();
+    }
+    return json({
+      data: {
+        user: invitedUser,
+        role,
+        status: "invited",
+        message: `${invitedUser.email} can now sign in as ${role.replace("_", " ")}.`
+      }
+    }, { status: 201 });
   }
 
   if (parts.length === 4 && parts[0] === "api" && parts[1] === "clubs" && parts[3] === "families" && request.method === "GET") {
@@ -895,8 +1098,12 @@ export function renderAppShell() {
         </header>
 
         <section class="panel">
-          <h2>Demo Authentication</h2>
-          <p>Switch roles to test what each user can do. The selection is saved in a cookie.</p>
+          <h2>Authentication</h2>
+          <p>Sign in by email to create a session cookie, or switch demo roles to test permissions.</p>
+          <form class="form-grid" data-login-form>
+            <label>Email<input name="email" type="email" value="clubadmin@beeooking.com" required></label>
+            <div class="actions"><button class="primary" type="submit">Sign in</button></div>
+          </form>
           <div class="role-buttons" data-role-buttons></div>
         </section>
 
@@ -923,6 +1130,14 @@ export function renderAppShell() {
               </div>
             </form>
             <div class="notice" data-setup-result>Setup changes will appear here.</div>
+            <form class="form-grid" data-invite-form>
+              <label>Invite email<input name="email" type="email" value="newadmin@beeooking.com" required></label>
+              <label>Role<select name="role"><option value="club_admin">Club Admin</option><option value="staff">Staff</option><option value="coach">Coach</option><option value="member">Member</option></select></label>
+              <div class="actions">
+                <button type="submit">Invite user</button>
+              </div>
+            </form>
+            <div class="notice" data-invite-result>Invite results will appear here.</div>
           </div>
         </section>
 
@@ -1108,6 +1323,20 @@ export function renderAppShell() {
           });
         });
 
+        document.querySelector("[data-login-form]").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const fields = Object.fromEntries(new FormData(event.currentTarget).entries());
+          try {
+            await api("/api/auth/login", {
+              method: "POST",
+              body: JSON.stringify({ email: fields.email })
+            });
+            await load();
+          } catch (error) {
+            alert(error.message);
+          }
+        });
+
         document.querySelector("[data-club-setup-form]").addEventListener("submit", async (event) => {
           event.preventDefault();
           const form = event.currentTarget;
@@ -1126,6 +1355,23 @@ export function renderAppShell() {
             await load();
           } catch (error) {
             document.querySelector("[data-setup-result]").textContent = error.message;
+          }
+        });
+
+        document.querySelector("[data-invite-form]").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const fields = Object.fromEntries(new FormData(event.currentTarget).entries());
+          const result = document.querySelector("[data-invite-result]");
+          try {
+            const invite = await api("/api/clubs/" + state.clubId + "/invites", {
+              method: "POST",
+              body: JSON.stringify(fields)
+            });
+            result.classList.remove("warn");
+            result.textContent = invite.message;
+          } catch (error) {
+            result.classList.add("warn");
+            result.textContent = error.message;
           }
         });
 

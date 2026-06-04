@@ -14,7 +14,9 @@ The app foundation now has:
 
 - Cloudflare Worker app structure.
 - Demo cookie authentication with role switching.
+- Email login that creates a session cookie.
 - Club setup flow.
+- Organization-domain invite validation for Club Admin, Staff, and Coach roles.
 - Members and families API.
 - Add dependent/spousal member flow with date-of-birth validation.
 - Family membership review action.
