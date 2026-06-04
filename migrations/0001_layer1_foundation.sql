@@ -143,12 +143,6 @@ create table if not exists audit_logs (
   created_at text not null default current_timestamp
 );
 
-create table if not exists app_state (
-  key text primary key,
-  value text not null,
-  updated_at text not null default current_timestamp
-);
-
 create index if not exists club_activities_club_idx on club_activities(club_id);
 create index if not exists club_users_club_idx on club_users(club_id);
 create index if not exists club_users_user_idx on club_users(user_id);

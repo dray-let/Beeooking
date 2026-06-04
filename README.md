@@ -22,7 +22,7 @@ The app foundation now has:
 - Booking gate check that blocks when waiver is missing.
 - D1-ready migration in `migrations/0001_layer1_foundation.sql`.
 
-The deployed Worker currently uses an in-memory fallback state. To make saved data durable in Cloudflare, create a D1 database and bind it as `DB`.
+When a Cloudflare D1 database is bound as `DB`, the app reads and writes the real foundation tables for clubs, activities, users, families, family members, waivers, and waiver signatures. Without the binding, it falls back to in-memory state so the preview still works.
 
 ## Connect Cloudflare D1
 
@@ -48,3 +48,5 @@ npx wrangler d1 migrations apply beeooking
 ```sh
 npx wrangler deploy
 ```
+
+After this, `/app` saves Layer 1 foundation data into D1 instead of the in-memory fallback.

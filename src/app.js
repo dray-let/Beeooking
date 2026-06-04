@@ -73,32 +73,282 @@ const initialState = {
 
 let memoryState = structuredClone(initialState);
 
+function hasD1(env) {
+  return Boolean(env?.DB);
+}
+
+function newId(prefix) {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function userNameParts(user) {
+  const parts = user.name.split(" ");
+  return {
+    firstName: parts[0] || "Demo",
+    lastName: parts.slice(1).join(" ") || "User"
+  };
+}
+
+function mapClub(row, activities) {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    timezone: row.timezone,
+    organizationEmailDomain: row.organization_email_domain || "",
+    setupStatus: row.setup_status,
+    activities
+  };
+}
+
+function mapFamily(row, members) {
+  return {
+    id: row.id,
+    clubId: row.club_id,
+    name: row.name,
+    primaryContactUserId: row.primary_contact_user_id,
+    billingOwnerUserId: row.billing_owner_user_id,
+    reviewStatus: row.review_status,
+    paymentStatus: row.payment_status,
+    members
+  };
+}
+
+function mapFamilyMember(row) {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    dateOfBirth: row.date_of_birth,
+    relationship: row.relationship,
+    participationStatus: row.participation_status,
+    isGuardian: Boolean(row.is_guardian)
+  };
+}
+
+function mapWaiver(row) {
+  return {
+    id: row.id,
+    clubId: row.club_id,
+    name: row.name,
+    version: row.version,
+    defaultCoverageScope: row.default_coverage_scope,
+    responsibilityStatement: row.responsibility_statement,
+    status: row.status
+  };
+}
+
+function mapSignature(row) {
+  return {
+    id: row.id,
+    clubId: row.club_id,
+    waiverId: row.waiver_id,
+    subjectUserId: row.subject_user_id,
+    coveredFamilyId: row.covered_family_id,
+    coverageScope: row.coverage_scope,
+    signedByUserId: row.signed_by_user_id,
+    status: row.status,
+    signedAt: row.signed_at
+  };
+}
+
+async function all(db, sql, ...bindings) {
+  const result = await db.prepare(sql).bind(...bindings).all();
+  return result.results || [];
+}
+
+async function first(db, sql, ...bindings) {
+  return db.prepare(sql).bind(...bindings).first();
+}
+
 async function loadState(env) {
-  if (!env?.DB) return;
+  if (!hasD1(env)) return;
   try {
-    const row = await env.DB.prepare("select value from app_state where key = ?").bind("layer1").first();
-    if (row?.value) {
-      memoryState = JSON.parse(row.value);
-      return;
-    }
-    await persistState(env);
+    await seedD1IfEmpty(env.DB);
+    memoryState = await readD1State(env.DB);
   } catch {
     // D1 binding can exist before migrations are applied; keep the app usable.
   }
 }
 
 async function persistState(env) {
-  if (!env?.DB) return;
+  if (!hasD1(env)) return;
   try {
-    await env.DB
-      .prepare(
-        "insert into app_state (key, value, updated_at) values (?, ?, current_timestamp) " +
-        "on conflict(key) do update set value = excluded.value, updated_at = current_timestamp"
-      )
-      .bind("layer1", JSON.stringify(memoryState))
-      .run();
+    await writeD1State(env.DB, memoryState);
   } catch {
     // See loadState note: missing migrations should not break the preview.
+  }
+}
+
+async function seedD1IfEmpty(db) {
+  const existing = await first(db, "select id from clubs limit 1");
+  if (existing) return;
+  await writeD1State(db, structuredClone(initialState));
+}
+
+async function readD1State(db) {
+  const clubRows = await all(db, "select * from clubs order by created_at, name");
+  const activityRows = await all(db, "select * from club_activities order by created_at, activity_type");
+  const familyRows = await all(db, "select * from families order by created_at, name");
+  const familyMemberRows = await all(db, "select * from family_members order by created_at, relationship");
+  const waiverRows = await all(db, "select * from waivers order by created_at, name");
+  const signatureRows = await all(db, "select * from waiver_signatures order by signed_at");
+
+  return {
+    clubs: clubRows.map((club) =>
+      mapClub(
+        club,
+        activityRows
+          .filter((activity) => activity.club_id === club.id)
+          .map((activity) => ({
+            activityType: activity.activity_type,
+            resourceUnit: activity.resource_unit,
+            resourceCount: activity.resource_count
+          }))
+      )
+    ),
+    families: familyRows.map((family) =>
+      mapFamily(
+        family,
+        familyMemberRows.filter((member) => member.family_id === family.id).map(mapFamilyMember)
+      )
+    ),
+    waivers: waiverRows.map(mapWaiver),
+    waiverSignatures: signatureRows.map(mapSignature)
+  };
+}
+
+async function writeD1State(db, state) {
+  for (const user of demoUsers) {
+    const { firstName, lastName } = userNameParts(user);
+    await db
+      .prepare(
+        "insert into users (id, email, first_name, last_name, date_of_birth, updated_at) values (?, ?, ?, ?, ?, current_timestamp) " +
+        "on conflict(id) do update set email = excluded.email, first_name = excluded.first_name, last_name = excluded.last_name, updated_at = current_timestamp"
+      )
+      .bind(user.id, user.email, firstName, lastName, user.id === "user_member" ? "1995-01-01" : "1985-01-01")
+      .run();
+  }
+
+  for (const club of state.clubs) {
+    await db
+      .prepare(
+        "insert into clubs (id, name, slug, timezone, organization_email_domain, setup_status, updated_at) values (?, ?, ?, ?, ?, ?, current_timestamp) " +
+        "on conflict(id) do update set name = excluded.name, slug = excluded.slug, timezone = excluded.timezone, organization_email_domain = excluded.organization_email_domain, setup_status = excluded.setup_status, updated_at = current_timestamp"
+      )
+      .bind(club.id, club.name, club.slug, club.timezone, club.organizationEmailDomain, club.setupStatus)
+      .run();
+
+    await db.prepare("delete from club_activities where club_id = ?").bind(club.id).run();
+    for (const activity of club.activities) {
+      await db
+        .prepare(
+          "insert into club_activities (id, club_id, activity_type, resource_unit, resource_count, updated_at) values (?, ?, ?, ?, ?, current_timestamp)"
+        )
+        .bind(
+          `activity_${club.id}_${activity.activityType}`,
+          club.id,
+          activity.activityType,
+          activity.resourceUnit,
+          Number(activity.resourceCount || 0)
+        )
+        .run();
+    }
+  }
+
+  for (const family of state.families) {
+    for (const member of family.members) {
+      await db
+        .prepare(
+          "insert into users (id, email, first_name, last_name, date_of_birth, updated_at) values (?, ?, ?, ?, ?, current_timestamp) " +
+          "on conflict(id) do update set first_name = excluded.first_name, last_name = excluded.last_name, date_of_birth = excluded.date_of_birth, updated_at = current_timestamp"
+        )
+        .bind(
+          member.userId,
+          `${member.userId}@example.local`,
+          member.firstName,
+          member.lastName,
+          member.dateOfBirth
+        )
+        .run();
+    }
+
+    await db
+      .prepare(
+        "insert into families (id, club_id, name, primary_contact_user_id, billing_owner_user_id, review_status, payment_status, updated_at) values (?, ?, ?, ?, ?, ?, ?, current_timestamp) " +
+        "on conflict(id) do update set name = excluded.name, primary_contact_user_id = excluded.primary_contact_user_id, billing_owner_user_id = excluded.billing_owner_user_id, review_status = excluded.review_status, payment_status = excluded.payment_status, updated_at = current_timestamp"
+      )
+      .bind(
+        family.id,
+        family.clubId,
+        family.name,
+        family.primaryContactUserId,
+        family.billingOwnerUserId,
+        family.reviewStatus,
+        family.paymentStatus
+      )
+      .run();
+
+    await db.prepare("delete from family_members where family_id = ?").bind(family.id).run();
+    for (const member of family.members) {
+      await db
+        .prepare(
+          "insert into family_members (id, club_id, family_id, user_id, first_name, last_name, date_of_birth, relationship, participation_status, is_guardian, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp)"
+        )
+        .bind(
+          member.id,
+          family.clubId,
+          family.id,
+          member.userId,
+          member.firstName,
+          member.lastName,
+          member.dateOfBirth,
+          member.relationship,
+          member.participationStatus,
+          member.isGuardian ? 1 : 0
+        )
+        .run();
+    }
+  }
+
+  for (const waiver of state.waivers) {
+    await db
+      .prepare(
+        "insert into waivers (id, club_id, name, version, body, default_coverage_scope, responsibility_statement, status) values (?, ?, ?, ?, ?, ?, ?, ?) " +
+        "on conflict(id) do update set name = excluded.name, version = excluded.version, default_coverage_scope = excluded.default_coverage_scope, responsibility_statement = excluded.responsibility_statement, status = excluded.status"
+      )
+      .bind(
+        waiver.id,
+        waiver.clubId,
+        waiver.name,
+        waiver.version,
+        waiver.responsibilityStatement || waiver.name,
+        waiver.defaultCoverageScope,
+        waiver.responsibilityStatement,
+        waiver.status
+      )
+      .run();
+  }
+
+  for (const signature of state.waiverSignatures) {
+    await db
+      .prepare(
+        "insert into waiver_signatures (id, club_id, waiver_id, subject_user_id, covered_family_id, coverage_scope, signed_by_user_id, status, signed_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        "on conflict(id) do update set status = excluded.status, signed_at = excluded.signed_at"
+      )
+      .bind(
+        signature.id,
+        signature.clubId,
+        signature.waiverId,
+        signature.subjectUserId || null,
+        signature.coveredFamilyId || null,
+        signature.coverageScope,
+        signature.signedByUserId,
+        signature.status,
+        signature.signedAt
+      )
+      .run();
   }
 }
 
