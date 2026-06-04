@@ -1,3 +1,9 @@
 name = "beeooking"
 main = "src/index.js"
 compatibility_date = "2024-11-01"
+
+routes = [
+  { pattern = "courthubs.club/app*", zone_name = "courthubs.club" },
+  { pattern = "courthubs.club/api/*", zone_name = "courthubs.club" },
+  { pattern = "courthubs.club/dashboard*", zone_name = "courthubs.club" }
+]
